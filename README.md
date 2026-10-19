@@ -2,6 +2,8 @@
 
 Short software development lessons, personalised learning paths, mock interviews and correction exercises.
 
+Live site: [skillloop-sigma.vercel.app](https://skillloop-sigma.vercel.app/).
+
 This repository is a **static prototype** built with HTML, CSS and JavaScript. There is no framework, package installation or build step. Each team member can work in one module folder.
 
 ## Run it locally
