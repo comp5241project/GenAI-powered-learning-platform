@@ -2,7 +2,7 @@
 (function () {
   const prefix = 'skillloop.v1.';
   const memory = new Map();
-  const clone = value => JSON.parse(JSON.stringify(value));
+  const clone = (value) => JSON.parse(JSON.stringify(value));
   function read(key, fallback) {
     try {
       const value = localStorage.getItem(prefix + key);
@@ -20,7 +20,11 @@
   }
   function write(key, value) {
     memory.set(key, clone(value));
-    try { localStorage.setItem(prefix + key, JSON.stringify(value)); } catch (_) { /* Still works for this page if storage is unavailable. */ }
+    try {
+      localStorage.setItem(prefix + key, JSON.stringify(value));
+    } catch (_) {
+      /* Still works for this page if storage is unavailable. */
+    }
   }
   function appendEvent(event) {
     const saved = read('activity', []);

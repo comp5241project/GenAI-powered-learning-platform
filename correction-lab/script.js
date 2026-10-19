@@ -1,7 +1,7 @@
 /** Module 4: an authored error example and reference explanation, not an AI grader. */
 (function () {
   const app = window.SkillLoop;
-  const $ = selector => document.querySelector(selector);
+  const $ = (selector) => document.querySelector(selector);
   const saved = app.read('correction', {});
   let revealed = saved.revealed === true;
   let nextSeen = saved.nextSeen === true;
@@ -10,9 +10,17 @@
   input.value = typeof saved.draft === 'string' ? saved.draft.slice(0, 5000) : '';
 
   function save() {
-    app.write('correction', { draft: input.value, revealed, nextSeen, caseId: 'average-empty-list' });
+    app.write('correction', {
+      draft: input.value,
+      revealed,
+      nextSeen,
+      caseId: 'average-empty-list',
+    });
   }
-  input.addEventListener('input', () => { input.setCustomValidity(''); save(); });
+  input.addEventListener('input', () => {
+    input.setCustomValidity('');
+    save();
+  });
   $('#sl-check').addEventListener('click', () => {
     if (!input.value.trim()) {
       input.setCustomValidity('Try a counterexample first.');
@@ -23,7 +31,12 @@
     revealed = true;
     $('#sl-correction-result').hidden = false;
     save();
-    app.appendEvent({ module: 'correction-lab', type: 'reference-opened', conceptId: 'software-testing', caseId: 'average-empty-list' });
+    app.appendEvent({
+      module: 'correction-lab',
+      type: 'reference-opened',
+      conceptId: 'software-testing',
+      caseId: 'average-empty-list',
+    });
   });
   $('#sl-next').addEventListener('click', () => {
     nextSeen = true;

@@ -1,10 +1,12 @@
 /** Module 3: a scripted question, follow-up and editable process history. */
 (function () {
   const app = window.SkillLoop;
-  const $ = selector => document.querySelector(selector);
+  const $ = (selector) => document.querySelector(selector);
   const saved = app.read('interview', {});
   let events = Array.isArray(saved.events)
-    ? saved.events.filter(item => item && typeof item.label === 'string' && typeof item.detail === 'string').slice(-40)
+    ? saved.events
+        .filter((item) => item && typeof item.label === 'string' && typeof item.detail === 'string')
+        .slice(-40)
     : [];
   let hintUsed = saved.hintUsed === true;
   let draft = typeof saved.draft === 'string' ? saved.draft.slice(0, 5000) : '';
@@ -18,7 +20,10 @@
   function renderReplay() {
     const replay = $('#sl-replay');
     replay.replaceChildren();
-    const rows = [{ label: 'Read the question', detail: 'How would you check AI-generated code?' }, ...events];
+    const rows = [
+      { label: 'Read the question', detail: 'How would you check AI-generated code?' },
+      ...events,
+    ];
     rows.forEach((event, index) => {
       const row = document.createElement('div');
       row.className = 'sl-step';
@@ -61,7 +66,11 @@
     answer.setCustomValidity('');
     draft = answer.value.trim();
     events.push({ label: hasAnswer ? 'Revised the answer' : 'Saved an answer', detail: draft });
-    if (!hasAnswer) events.push({ label: 'Received a scripted follow-up', detail: 'What would you expect for an empty list, and how would you test it?' });
+    if (!hasAnswer)
+      events.push({
+        label: 'Received a scripted follow-up',
+        detail: 'What would you expect for an empty list, and how would you test it?',
+      });
     events = events.slice(-40);
     hasAnswer = true;
     save();

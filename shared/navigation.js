@@ -15,10 +15,14 @@
     <div class="sl-top"><span class="sl-badge">Prototype · local data</span><span class="sl-avatar" aria-hidden="true">SL</span></div>`;
   document.getElementById('site-navigation').innerHTML = `
     <div class="sl-kicker">Workspace</div>
-    <nav class="sl-nav" aria-label="Learning modules">${modules.map(([folder, icon, title]) => `
+    <nav class="sl-nav" aria-label="Learning modules">${modules
+      .map(
+        ([folder, icon, title]) => `
       <a href="${root}${folder}/" ${active === folder ? 'aria-current="page"' : ''}>
         <i data-lucide="${icon}" aria-hidden="true"></i>${title}
-      </a>`).join('')}</nav>
+      </a>`
+      )
+      .join('')}</nav>
     <div class="sl-side-foot"><div class="sl-orbit"><i data-lucide="orbit" aria-hidden="true"></i><span>Software development<br>Learning & practice</span></div></div>`;
   window.SkillLoop.icons();
 })();

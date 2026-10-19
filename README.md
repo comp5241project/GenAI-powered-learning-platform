@@ -16,12 +16,12 @@ Open [http://localhost:8000](http://localhost:8000). On Windows, `py -m http.ser
 
 ## Where each person works
 
-| Module | Folder | Starting files |
-| --- | --- | --- |
-| Knowledge map and mini-courses | `knowledge-map/` | `index.html`, `style.css`, `script.js`, `data.js` |
-| Initial assessment and learning paths | `learning-path/` | `index.html`, `style.css`, `script.js` |
-| Mock interview and process review | `interview/` | `index.html`, `style.css`, `script.js` |
-| AI-style answer correction | `correction-lab/` | `index.html`, `style.css`, `script.js` |
+| Module                                | Folder            | Starting files                                    |
+| ------------------------------------- | ----------------- | ------------------------------------------------- |
+| Knowledge map and mini-courses        | `knowledge-map/`  | `index.html`, `style.css`, `script.js`, `data.js` |
+| Initial assessment and learning paths | `learning-path/`  | `index.html`, `style.css`, `script.js`            |
+| Mock interview and process review     | `interview/`      | `index.html`, `style.css`, `script.js`            |
+| AI-style answer correction            | `correction-lab/` | `index.html`, `style.css`, `script.js`            |
 
 Each folder has its own README. Most work should stay inside the assigned folder. Shared navigation, styling and browser storage helpers live in `shared/`.
 
@@ -63,7 +63,7 @@ Progress is saved in this browser's local storage. It is not synced between devi
 
 Discuss changes to `shared/`, `vercel.json` and shared data contracts first. Keep concept IDs stable so links from other modules continue to work.
 
-- [中文协作说明](docs/CONTRIBUTING.md)
+- [Team guide](docs/CONTRIBUTING.md)
 - [Shared data and module contracts](docs/DATA-CONTRACTS.md)
 - [Initial tasks for the four modules](docs/MODULE-TASKS.md)
 - [Vercel deployment](docs/DEPLOYMENT.md)

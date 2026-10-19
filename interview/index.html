@@ -1,83 +1,89 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f6f5f1">
-  <meta name="description" content="SkillLoop: short software development lessons, personalised paths, interview practice and AI correction challenges.">
-  <title>Interview | SkillLoop</title>
-  <link rel="icon" href="../public/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../shared/styles.css">
-  <link rel="stylesheet" href="style.css">
-  <script src="../shared/vendor/lucide.min.js" defer></script>
-  <script src="../shared/storage.js" defer></script>
-  <script src="../shared/navigation.js" defer></script>
-  <script src="script.js" defer></script>
-</head>
-<body data-root="../" data-module="interview">
-  <a class="skip-link" href="#main-content">Skip to content</a>
-  <div id="skillloop-prototype">
-    <header id="site-header" class="sl-head"></header>
-    <div class="sl-shell">
-      <aside id="site-navigation" class="sl-side" aria-label="Workspace navigation"></aside>
-      <main id="main-content" class="sl-main">
-<div class="sl-kicker">Practice studio</div>
-<h1>Show how you think.</h1>
-<p class="sl-intro">Software testing · Text interview · Scripted demo</p>
-<div class="sl-card">
-<div class="sl-row">
-<div class="sl-icon-title">
-<i data-lucide="bot" aria-hidden="true">
-</i>
-<h3>Your interviewer</h3>
-</div>
-<span class="sl-chip">Question 01</span>
-</div>
-<div class="sl-message">AI-generated code runs successfully. How would you check that it is correct?</div>
-<label for="sl-answer">Your approach</label>
-<textarea id="sl-answer" placeholder="Walk through your checks…">
-</textarea>
-<div class="sl-row sl-spaced">
-<button type="button" class="sl-btn" id="sl-hint">
-<i data-lucide="lightbulb" aria-hidden="true">
-</i>A small hint</button>
-<button type="button" class="sl-btn sl-btn-main" id="sl-submit">Continue<i data-lucide="arrow-right" aria-hidden="true">
-</i>
-</button>
-</div>
-<div id="sl-hint-text" class="sl-small" style="margin-top:12px" hidden>Try an empty input. What should happen?</div>
-<div id="sl-followup" class="sl-feedback" aria-live="polite" hidden>
-<div class="sl-icon-title">
-<i data-lucide="corner-down-right" aria-hidden="true">
-</i>
-<h3>Follow-up</h3>
-</div>
-<p>What result would you expect for an empty list, and how would you test it?</p>
-<p class="sl-small">Preset question · AI service not connected</p>
-</div>
-</div>
-<div class="sl-card sl-spaced">
-<div class="sl-row">
-<div class="sl-icon-title">
-<i data-lucide="history" aria-hidden="true">
-</i>
-<h3>Your process, replayed</h3>
-</div>
-<span class="sl-small">This session</span>
-</div>
-<div id="sl-replay" aria-live="polite">
-<div class="sl-step">
-<span class="sl-dot">01</span>
-<div>
-<h3>Read the question</h3>
-<div class="sl-small">Check AI-generated code.</div>
-</div>
-</div>
-</div>
-</div>
-      </main>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f5f1" />
+    <meta
+      name="description"
+      content="SkillLoop: short software development lessons, personalised paths, interview practice and AI correction challenges."
+    />
+    <title>Interview | SkillLoop</title>
+    <link rel="icon" href="../public/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../shared/styles.css" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="../shared/vendor/lucide.min.js" defer></script>
+    <script src="../shared/storage.js" defer></script>
+    <script src="../shared/navigation.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body data-root="../" data-module="interview">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div id="skillloop-prototype">
+      <header id="site-header" class="sl-head"></header>
+      <div class="sl-shell">
+        <aside id="site-navigation" class="sl-side" aria-label="Workspace navigation"></aside>
+        <main id="main-content" class="sl-main">
+          <div class="sl-kicker">Practice studio</div>
+          <h1>Show how you think.</h1>
+          <p class="sl-intro">Software testing · Text interview · Scripted demo</p>
+          <div class="sl-card">
+            <div class="sl-row">
+              <div class="sl-icon-title">
+                <i data-lucide="bot" aria-hidden="true"> </i>
+                <h3>Your interviewer</h3>
+              </div>
+              <span class="sl-chip">Question 01</span>
+            </div>
+            <div class="sl-message">
+              AI-generated code runs successfully. How would you check that it is correct?
+            </div>
+            <label for="sl-answer">Your approach</label>
+            <textarea id="sl-answer" placeholder="Walk through your checks…"></textarea>
+            <div class="sl-row sl-spaced">
+              <button type="button" class="sl-btn" id="sl-hint">
+                <i data-lucide="lightbulb" aria-hidden="true"> </i>A small hint
+              </button>
+              <button type="button" class="sl-btn sl-btn-main" id="sl-submit">
+                Continue<i data-lucide="arrow-right" aria-hidden="true"> </i>
+              </button>
+            </div>
+            <div id="sl-hint-text" class="sl-small" style="margin-top: 12px" hidden>
+              Try an empty input. What should happen?
+            </div>
+            <div id="sl-followup" class="sl-feedback" aria-live="polite" hidden>
+              <div class="sl-icon-title">
+                <i data-lucide="corner-down-right" aria-hidden="true"> </i>
+                <h3>Follow-up</h3>
+              </div>
+              <p>What result would you expect for an empty list, and how would you test it?</p>
+              <p class="sl-small">Preset question · AI service not connected</p>
+            </div>
+          </div>
+          <div class="sl-card sl-spaced">
+            <div class="sl-row">
+              <div class="sl-icon-title">
+                <i data-lucide="history" aria-hidden="true"> </i>
+                <h3>Your process, replayed</h3>
+              </div>
+              <span class="sl-small">This session</span>
+            </div>
+            <div id="sl-replay" aria-live="polite">
+              <div class="sl-step">
+                <span class="sl-dot">01</span>
+                <div>
+                  <h3>Read the question</h3>
+                  <div class="sl-small">Check AI-generated code.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
-  </div>
-  <noscript>Please enable JavaScript to use the interactive exercises. <a href="../index.html">Home</a></noscript>
-</body>
+    <noscript
+      >Please enable JavaScript to use the interactive exercises.
+      <a href="../index.html">Home</a></noscript
+    >
+  </body>
 </html>
