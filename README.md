@@ -1,1 +1,1 @@
-# GenAI-powered-learning-platform
+# SkillLoop: An AI-Powered Software Development Learning and Interview Platform
