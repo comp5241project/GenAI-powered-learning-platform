@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f5f1">
+  <meta name="description" content="SkillLoop: short software development lessons, personalised paths, interview practice and AI correction challenges.">
+  <title>Correction lab | SkillLoop</title>
+  <link rel="icon" href="../public/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../shared/styles.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="../shared/vendor/lucide.min.js" defer></script>
+  <script src="../shared/storage.js" defer></script>
+  <script src="../shared/navigation.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body data-root="../" data-module="correction-lab">
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <div id="skillloop-prototype">
+    <header id="site-header" class="sl-head"></header>
+    <div class="sl-shell">
+      <aside id="site-navigation" class="sl-side" aria-label="Workspace navigation"></aside>
+      <main id="main-content" class="sl-main">
+<div class="sl-kicker">Correction lab</div>
+<h1>Be the one who spots it.</h1>
+<p class="sl-intro">Find the flaw. Explain it. Make it better.</p>
+<div class="sl-card">
+<div class="sl-row">
+<div class="sl-icon-title">
+<i data-lucide="bug" aria-hidden="true">
+</i>
+<h3>Does this handle every list?</h3>
+</div>
+<span class="sl-chip">Reviewed sample</span>
+</div>
+<pre class="sl-code">def average(numbers):
+    return sum(numbers) / len(numbers)
+
+# AI: "This handles any list."</pre>
+<label for="sl-correction">Your counterexample and fix</label>
+<textarea id="sl-correction" placeholder="What input breaks this assumption?">
+</textarea>
+<button type="button" class="sl-btn sl-btn-main sl-spaced" id="sl-check">Check the example<i data-lucide="arrow-right" aria-hidden="true">
+</i>
+</button>
+<div class="sl-feedback" id="sl-correction-result" aria-live="polite" hidden>
+<div class="sl-icon-title">
+<i data-lucide="circle-check" aria-hidden="true">
+</i>
+<h3>Counterexample: []</h3>
+</div>
+<p>An empty list causes division by zero. Define the empty-input rule before calculating.</p>
+<p class="sl-small">Reference explanation · Your answer is not auto-scored</p>
+<button type="button" class="sl-btn" id="sl-next" style="margin-top:14px">Try a new case<i data-lucide="arrow-up-right" aria-hidden="true">
+</i>
+</button>
+</div>
+<div id="sl-next-question" class="sl-message" hidden>A function returns items[0]. What inputs would you test, and why?</div>
+</div>
+<p class="sl-small sl-spaced">The team's separate correction prototype: <a href="https://sonic-fiddle-gzb7c64.vercel.app/bureau.html" target="_blank" rel="noopener noreferrer">Open Code Review Bureau <span aria-hidden="true">↗</span></a></p>
+      </main>
+    </div>
+  </div>
+  <noscript>Please enable JavaScript to use the interactive exercises. <a href="../index.html">Home</a></noscript>
+</body>
+</html>
