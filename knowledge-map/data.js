@@ -115,6 +115,15 @@ window.SkillLoopGraph = {
       ],
     },
   ],
+  questions: [
+    { id: 'foundations-check', topicId: 'foundations', prompt: 'What should guide the first version of an application?', options: ['The largest possible feature list', 'A specific user need and observable result', 'A choice of programming language alone'], answerIndex: 1, feedback: 'Start with the user, their task and a result you can check.' },
+    { id: 'requirements-check', topicId: 'requirements', prompt: 'Which requirement can a team check directly?', options: ['The app feels modern', 'The app is simple', 'A student can add an assignment with a title and deadline'], answerIndex: 2, feedback: 'A concrete user action and visible result make the requirement testable.' },
+    { id: 'code-reading-check', topicId: 'code-reading', prompt: 'What is a useful first step when reading an unfamiliar function?', options: ['Predict an output for a specific input', 'Rename every variable', 'Assume the comments are always correct'], answerIndex: 0, feedback: 'Trace a concrete input before running the function, then compare the result.' },
+    { id: 'software-testing-check', topicId: 'software-testing', prompt: 'What makes a test more useful than simply running the program?', options: ['It has a stated expected result', 'It only uses ordinary inputs', 'It always passes'], answerIndex: 0, feedback: 'A test compares actual behavior with an expected result.' },
+    { id: 'communication-check', topicId: 'communication', prompt: 'A request for reminders is vague. What should you ask first?', options: ['Which framework is popular?', 'When should reminders arrive and in which time zone?', 'Can the interface be made blue?'], answerIndex: 1, feedback: 'Clarify the user scenario and constraints before choosing an implementation.' },
+    { id: 'ai-code-review-check', topicId: 'ai-code-review', prompt: 'An AI claims a function handles every list. What is good evidence?', options: ['The confident explanation', 'A counterexample such as an empty list and a test', 'The function name'], answerIndex: 1, feedback: 'A counterexample and test can challenge a broad claim.' },
+    { id: 'edge-cases-check', topicId: 'edge-cases', prompt: 'Which input is a boundary case for reading the first list item?', options: ['A list with ten items', 'An empty list', 'A list with five ordinary items'], answerIndex: 1, feedback: 'An empty list has no first item, so the expected behavior needs an explicit rule.' },
+  ],
   activities: [
     {
       id: 'testing-edge-relation', kind: 'relation-judgment',

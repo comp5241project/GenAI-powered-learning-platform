@@ -35,7 +35,7 @@ export function validateGraph(payload) {
   text(publication.version, 'Publication version', 1, 40);
   text(publication.title, 'Publication title', 2, 160);
   date(publication.publishedAt, 'Publication date');
-  const topics = list(payload.topics, 'Topics', 50);
+  const topics = list(payload.topics, 'Topics', 500);
   if (!topics.length) throw new Error('At least one topic is required.');
   const topicIds = new Set();
   for (const topic of topics) {
@@ -45,14 +45,19 @@ export function validateGraph(payload) {
     text(topic.title, 'Topic title', 2, 100);
     text(topic.icon, 'Topic icon', 2, 50);
     text(topic.description, 'Topic description', 5, 280);
-    if (!['core', 'extension'].includes(topic.pathRole) || !Number.isInteger(topic.order) || topic.order < 1 || topic.order > 50) throw new Error(`Invalid path for ${topic.id}.`);
-    if (!topic.position || !Number.isInteger(topic.position.column) || !Number.isInteger(topic.position.row) ||
-        topic.position.column < 1 || topic.position.column > 5 || topic.position.row < 1 || topic.position.row > 20) throw new Error(`Invalid position for ${topic.id}.`);
+    if (topic.archived !== undefined && typeof topic.archived !== 'boolean') throw new Error(`Invalid archive state for ${topic.id}.`);
+    if (!['core', 'extension'].includes(topic.pathRole) || !Number.isInteger(topic.order) || topic.order < 1 || topic.order > 500) throw new Error(`Invalid path for ${topic.id}.`);
+    const position = topic.position;
+    const legacyPosition = Number.isInteger(position?.column) && Number.isInteger(position?.row) &&
+      position.column >= 1 && position.column <= 50 && position.row >= 1 && position.row <= 100;
+    const canvasPosition = Number.isFinite(position?.x) && Number.isFinite(position?.y) &&
+      Math.abs(position.x) <= 100000 && Math.abs(position.y) <= 100000;
+    if (!legacyPosition && !canvasPosition) throw new Error(`Invalid position for ${topic.id}.`);
     for (const field of ['goal', 'explanation', 'example', 'nextAction']) text(topic.lesson?.[field], `Lesson ${field}`, 8, 2000);
     if (topic.practiceHref && (typeof topic.practiceHref !== 'string' || !/^\.\.\/correction-lab\/$/.test(topic.practiceHref))) throw new Error('Practice link is not an approved local route.');
   }
-  if (sharedTopicIds.some((topicId) => !topicIds.has(topicId))) throw new Error('A shared concept ID is missing.');
-  const relations = list(payload.relations, 'Relations', 150);
+  if (publication.id === 'software-development' && sharedTopicIds.some((topicId) => !topicIds.has(topicId))) throw new Error('A shared concept ID is missing.');
+  const relations = list(payload.relations, 'Relations', 2000);
   const relationIds = new Set();
   for (const relation of relations) {
     id(relation?.id, 'Relation');
@@ -61,10 +66,11 @@ export function validateGraph(payload) {
     if (!topicIds.has(relation.source) || !topicIds.has(relation.target) || relation.source === relation.target || !relationTypes.has(relation.type)) throw new Error(`Invalid endpoints or type for ${relation.id}.`);
     text(relation.reason, 'Relationship reason', 12, 280);
   }
-  const events = list(payload.events, 'Events', 20);
+  const events = list(payload.events || [], 'Events', 500);
   const eventIds = new Set();
   for (const event of events) {
     id(event?.id, 'Event');
+    if (event.archived !== undefined && typeof event.archived !== 'boolean') throw new Error('Invalid case archive state.');
     if (eventIds.has(event.id)) throw new Error(`Duplicate event: ${event.id}`);
     eventIds.add(event.id);
     text(event.title, 'Event title', 5, 160);
@@ -89,7 +95,7 @@ export function validateGraph(payload) {
       text(link.reason, 'Event link reason', 12, 280);
     }
   }
-  const activities = list(payload.activities, 'Activities', 30);
+  const activities = list(payload.activities || [], 'Activities', 1000);
   const activityIds = new Set();
   for (const activity of activities) {
     id(activity?.id, 'Activity');
@@ -101,6 +107,22 @@ export function validateGraph(payload) {
     if (list(activity.options, 'Activity options', 4).length < 2 || activity.options.some((option) => typeof option !== 'string' || option.trim().length < 2 || option.length > 240)) throw new Error('Activity needs 2–4 options.');
     if (!Number.isInteger(activity.answerIndex) || activity.answerIndex < 0 || activity.answerIndex >= activity.options.length) throw new Error('Invalid activity answer.');
     text(activity.feedback, 'Activity feedback', 10, 900);
+  }
+  const questions = list(payload.questions || [], 'Questions', 1000);
+  const questionIds = new Set();
+  for (const question of questions) {
+    id(question?.id, 'Question');
+    if (question.archived !== undefined && typeof question.archived !== 'boolean') throw new Error('Invalid question archive state.');
+    if (questionIds.has(question.id)) throw new Error(`Duplicate question: ${question.id}`);
+    questionIds.add(question.id);
+    if (!topicIds.has(question.topicId)) throw new Error(`Unknown question concept: ${question.topicId}`);
+    text(question.prompt, 'Question prompt', 8, 600);
+    if (list(question.options, 'Question options', 4).length < 2 ||
+      question.options.some((option) => typeof option !== 'string' || option.trim().length < 2 || option.length > 240))
+      throw new Error('Question needs 2–4 options.');
+    if (!Number.isInteger(question.answerIndex) || question.answerIndex < 0 || question.answerIndex >= question.options.length)
+      throw new Error('Invalid question answer.');
+    text(question.feedback, 'Question feedback', 8, 900);
   }
   return payload;
 }

@@ -1,77 +1,17 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Teacher workspace | SkillLoop</title>
-    <link rel="icon" href="../public/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="../shared/styles.css" />
-    <link rel="stylesheet" href="style.css" />
-    <script src="../shared/vendor/lucide.min.js" defer></script>
-    <script src="../shared/storage.js" defer></script>
-    <script src="../shared/navigation.js" defer></script>
-    <script src="data.js" defer></script>
-    <script src="teacher.js" defer></script>
-  </head>
-  <body data-root="../" data-module="knowledge-map">
-    <a class="skip-link" href="#main-content">Skip to content</a>
-    <div id="skillloop-prototype">
-      <header id="site-header" class="sl-head"></header>
-      <div class="sl-shell">
-        <aside id="site-navigation" class="sl-side" aria-label="Workspace navigation"></aside>
-        <main id="main-content" class="sl-main sl-teacher-main">
-          <div class="sl-kicker">Teacher workspace</div>
-          <h1>Review and publish a knowledge map.</h1>
-          <p class="sl-intro">Drafts are private to their teacher. Save a version, preview the learner view, check sources and answers, then publish it.</p>
-          <p><a href="index.html">← Back to learner map</a></p>
-          <section class="sl-card" aria-labelledby="sl-auth-title">
-            <h2 id="sl-auth-title" class="sl-section-heading">Teacher account</h2>
-            <form id="teacher-login" class="sl-teacher-login">
-              <label>Email <input id="teacher-email" type="email" autocomplete="username" required /></label>
-              <label>Password <input id="teacher-password" type="password" autocomplete="current-password" required /></label>
-              <button class="sl-btn sl-btn-main" type="submit">Sign in</button>
-            </form>
-            <button id="teacher-logout" type="button" class="sl-text-button" hidden>Sign out</button>
-            <p id="teacher-status" class="sl-small" role="status" aria-live="polite"></p>
-          </section>
-
-          <section class="sl-card sl-teacher-section" aria-labelledby="sl-editor-title">
-            <h2 id="sl-editor-title" class="sl-section-heading">Graph draft</h2>
-            <p class="sl-small">Edit the graph JSON. Keep concept IDs stable; set a new <code>publication.version</code> and publication date for every changed release.</p>
-            <label for="teacher-json">Draft content</label>
-            <textarea id="teacher-json" class="sl-json-editor" spellcheck="false" disabled></textarea>
-            <div class="sl-actions sl-teacher-actions">
-              <button id="teacher-save" class="sl-btn" type="button" disabled>Save draft</button>
-              <button id="teacher-preview" class="sl-btn" type="button" disabled>Preview learner view</button>
-            </div>
-            <div id="teacher-preview-panel" hidden>
-              <h3>Unpublished preview</h3>
-              <iframe id="teacher-preview-frame" title="Unpublished knowledge map preview"></iframe>
-            </div>
-            <label class="sl-review-check"><input id="teacher-reviewed" type="checkbox" disabled /> I reviewed dates, source links, concept links, practice answers and the preview.</label>
-            <button id="teacher-publish" class="sl-btn sl-btn-main" type="button" disabled>Publish saved version</button>
-            <p id="teacher-editor-status" class="sl-small" role="status" aria-live="polite"></p>
-          </section>
-
-          <section class="sl-card sl-teacher-section" aria-labelledby="sl-discover-title">
-            <h2 id="sl-discover-title" class="sl-section-heading">Find historical source material</h2>
-            <p class="sl-small">AI search returns research notes and source URLs for teacher review. It never edits the public graph. Verify the article, event date and any teaching inference before adding an event to the draft.</p>
-            <form id="teacher-discovery" class="sl-teacher-discovery">
-              <label for="teacher-query">Search topic</label>
-              <input id="teacher-query" minlength="8" maxlength="300" placeholder="Example: software testing failures in a 2024 production incident" required disabled />
-              <button class="sl-btn" type="submit" disabled>Find sources</button>
-            </form>
-            <p id="teacher-discovery-status" class="sl-small" role="status" aria-live="polite"></p>
-            <div id="teacher-result" hidden>
-              <h3>Research note — review before use</h3>
-              <p id="teacher-result-meta" class="sl-small"></p>
-              <pre id="teacher-result-text" class="sl-research-note"></pre>
-              <h3>Source links</h3>
-              <ul id="teacher-result-sources"></ul>
-            </div>
-          </section>
-        </main>
-      </div>
-    </div>
-  </body>
-</html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Teacher graph studio | SkillLoop</title>
+<link rel="icon" href="../public/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../shared/styles.css"><link rel="stylesheet" href="network.css">
+<script src="../shared/vendor/lucide.min.js" defer></script><script src="../shared/storage.js" defer></script><script src="../shared/navigation.js" defer></script><script src="data.js" defer></script><script src="network-core.js?v=3" defer></script><script src="teacher.js?v=3" defer></script></head>
+<body data-root="../" data-module="knowledge-map"><a class="skip-link" href="#main-content">Skip to content</a><div id="skillloop-prototype"><header id="site-header" class="sl-head"></header><div class="sl-shell"><aside id="site-navigation" class="sl-side" aria-label="Workspace navigation"></aside><main id="main-content" class="sl-main">
+<div class="sl-kicker">Teacher graph studio</div><h1>Create, review and publish a graph.</h1><p class="sl-intro">Your drafts and AI research stay private. Learners see only the version you publish.</p><nav class="kn-page-nav"><a href="index.html">My network</a><a href="graph.html?graph=software-development">Sample public graph</a></nav>
+<section class="sl-card"><h2 class="sl-section-heading">Teacher account</h2><form id="teacher-login"><label>Email <input name="email" type="email" autocomplete="username" required></label><label>Password <input name="password" type="password" autocomplete="current-password" required></label><button class="sl-btn" type="submit">Sign in</button></form><button id="teacher-logout" class="sl-btn" type="button" hidden>Sign out</button><p id="teacher-status" role="status"></p></section>
+<div id="teacher-workspace" hidden>
+<section class="sl-card"><h2 class="sl-section-heading">My graphs</h2><form id="teacher-create"><label>New graph title <input name="title" maxlength="160" required></label><button class="sl-btn" type="submit">Create graph</button></form><button id="teacher-create-sample" class="sl-btn" type="button">Create from seven-node sample</button><label>Choose graph <select id="teacher-graphs"></select></label><p id="teacher-share"></p></section>
+<section class="sl-card"><h2 class="sl-section-heading">Graph and publication</h2><div class="kn-teacher-layout"><div><div class="sl-actions"><button id="teacher-add-topic" class="sl-btn" type="button">Add concept</button><button id="teacher-zoom-in" class="sl-btn" type="button">Zoom in</button><button id="teacher-zoom-out" class="sl-btn" type="button">Zoom out</button></div><div id="teacher-canvas"></div><label>Find concept <input id="teacher-search" type="search"></label><div id="teacher-topic-list" class="kn-list"></div></div>
+<div><form id="teacher-meta" class="kn-teacher-form"><label>Graph title <input name="title" required maxlength="160"></label><label>Next version <input name="version" required maxlength="40"></label><label>Publication date <input name="date" type="date" required></label></form>
+<form id="teacher-topic" class="kn-teacher-form"><h3>Selected concept</h3><label>ID <input name="id" readonly></label><label>Title <input name="title" required maxlength="100"></label><label>Description <textarea name="description" required maxlength="280"></textarea></label><label>Learning goal <textarea name="goal" required></textarea></label><label>Explanation <textarea name="explanation" required></textarea></label><label>Example <textarea name="example" required></textarea></label><label>Next action <textarea name="nextAction" required></textarea></label><label><input name="archived" type="checkbox"> Archive from graph while preserving links</label></form></div></div></section>
+<section class="sl-card"><h2 class="sl-section-heading">Relationships</h2><form id="teacher-relation"><label>From <select name="source"></select></label><label>To <select name="target"></select></label><label>Type <select name="type"><option value="related">Related</option><option value="prerequisite">Prerequisite</option><option value="enables">Enables</option><option value="supports">Supports</option></select></label><label>Reason <input name="reason" maxlength="280" required></label><button class="sl-btn" type="submit">Add relationship</button></form><div id="teacher-relations"></div></section>
+<section class="sl-card"><h2 class="sl-section-heading">Questions</h2><p class="sl-small">Each concept can have one or more dedicated question pages.</p><form id="teacher-question"><label>Concept <select name="topicId"></select></label><label>Question <textarea name="prompt" required></textarea></label><label>Options, one per line <textarea name="options" required></textarea></label><label>Correct option number <input name="answer" type="number" min="1" max="4" value="1" required></label><label>Feedback <textarea name="feedback" required></textarea></label><button class="sl-btn" type="submit">Add question</button></form><div id="teacher-questions"></div></section>
+<section class="sl-card"><h2 class="sl-section-heading">Sourced cases</h2><form id="teacher-case"><label>Concept <select name="topicId"></select></label><label>Case title <input name="title" required maxlength="160"></label><label>Event date <input name="date" type="date" required></label><label>Summary <textarea name="summary" required></textarea></label><label>Source title <input name="sourceTitle" required></label><label>Source HTTPS URL <input name="sourceUrl" type="url" required></label><label>Source publication date <input name="sourceDate" type="date" required></label><label>Reported fact <textarea name="fact" required></textarea></label><label>Source section for the fact <input name="sourceSection" required></label><label>Teaching interpretation <textarea name="inference" required></textarea></label><button class="sl-btn" type="submit">Add case</button></form><div id="teacher-cases"></div></section>
+<section class="sl-card"><h2 class="sl-section-heading">Private AI source search</h2><p class="sl-small">Search results are research material. Verify dates, claims and source links before writing a case.</p><form id="teacher-discovery"><label>Search topic <input name="query" minlength="8" maxlength="300" required></label><button class="sl-btn" type="submit">Find sources</button></form><p id="teacher-discovery-status" role="status"></p><pre id="teacher-research"></pre><ul id="teacher-sources"></ul></section>
+<section class="sl-card"><h2 class="sl-section-heading">Preview and publication</h2><div class="sl-actions"><button id="teacher-save" class="sl-btn" type="button">Save draft</button><button id="teacher-preview" class="sl-btn" type="button">Preview graph</button><button id="teacher-preview-concept" class="sl-btn" type="button">Preview knowledge page</button><button id="teacher-preview-question" class="sl-btn" type="button">Preview question</button><button id="teacher-preview-case" class="sl-btn" type="button">Preview case</button></div><iframe id="teacher-frame" title="Private draft preview" style="width:100%;height:480px;border:1px solid var(--sl-line)" hidden></iframe><label><input id="teacher-reviewed" type="checkbox"> I reviewed the saved draft, sources, links, answers and page previews.</label><button id="teacher-publish" class="sl-btn sl-btn-main" type="button">Publish saved version</button><p id="teacher-editor-status" role="status"></p></section>
+</div></main></div></div></body></html>

@@ -6,13 +6,14 @@ The knowledge module can run as a static sample with `python -m http.server 8000
 
 - `knowledge-map/data.js` is the curated fallback and initial teacher draft template. Keep the seven shared concept IDs stable.
 - `/api/knowledge` is a same-origin Vercel Function. It uses Supabase Auth and REST with the publishable key and the user's JWT; it does not use a service-role key. The OpenAI key is read only by this function.
-- `supabase/migrations/20261021000100_knowledge_backend.sql` creates tables, row-level policies and transactional RPCs. A graph has one owner, a private draft revision and an immutable publication row for each version. The graph's `current_version` changes only after the new publication row is written in the same database transaction.
-- `knowledge-map/teacher.html` is a teacher editor. Its local preview is not a publication. A teacher must save the reviewed JSON before publishing. AI search results are private research notes until a teacher manually writes and reviews an event in the graph draft.
-- Signed-in references are per account. Browser-local references and study marks are separate. There is no automatic migration between identities or devices.
+- `supabase/migrations/20261021000100_knowledge_backend.sql` is the original schema. `20261021000200_knowledge_network_v2.sql` adds personal note nodes, manual links, positions, version-aware references and explicit transactional import. Apply both in order; do not edit the first migration.
+- A graph has one owner, a private draft revision and an immutable publication row for each version. The graph's `current_version` changes only after the new publication row is written in the same database transaction. Different teachers can own multiple graphs.
+- `knowledge-map/teacher.html` is a visual editor with forms, drag positions and cross-page previews. Its local preview is not a publication. A teacher saves and reviews the exact draft before publishing. AI search results are private research notes until a teacher writes and checks a sourced case.
+- Signed-in references, note nodes and manual links are per account. Browser-local nodes and study marks are separate. Import runs only after a student clicks the explicit import control.
 
 ## Provisioning
 
-1. Create a dedicated Supabase project. Apply the SQL migration through the Supabase SQL editor or your team's migration workflow. Apply it once to a new project.
+1. Create a dedicated Supabase project. Apply both SQL migrations in filename order through the Supabase SQL editor or your team's migration workflow. Apply each once. Existing V1 installations apply only the second migration.
 2. Create teacher and learner accounts in Supabase Auth. Teacher role assignment is an administrator operation; do not expose it in a browser form. In the SQL editor, promote a known teacher account:
 
    ```sql
@@ -23,7 +24,7 @@ The knowledge module can run as a static sample with `python -m http.server 8000
 
    Accounts without a `skillloop_roles` row have learner access. Only graph owners can update their own drafts and publish them. Assign a different owner only through a deliberate database migration.
 3. In Vercel, keep the existing **Other** project preset and repository root. Add server environment variables: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `OPENAI_API_KEY`. `OPENAI_MODEL` is optional; the default is `gpt-5.1`. Scope secrets to the intended environments. Redeploy after setting them.
-4. Open `/knowledge-map/teacher.html`, sign in as a teacher, save the sample payload as a draft, preview it, check its source and practice content, then publish. `/knowledge-map/` will start reading that public version. Until the first publication, it shows the curated fallback.
+4. Open `/knowledge-map/teacher.html`, sign in as a teacher and create an owned graph. Save the draft, preview graph, knowledge, question and case pages, check source material and answers, then publish. Share the generated `/knowledge-map/graph.html?graph=<graphId>` link. The sample graph works statically until its owner publishes it; `/knowledge-map/` is the student's personal network.
 
 For a local full-stack preview, use `vercel dev` after linking a Vercel project and supplying local environment variables through Vercel's normal environment workflow. A Python static server only exercises the fallback; it cannot run `/api/knowledge`.
 
@@ -36,8 +37,8 @@ The API limits each teacher to ten searches per UTC day as a basic cost guard.
 
 ## Privacy and migration
 
-Account references are visible only to their owner through row-level policies. Their note is limited to 1,000 characters. Browser-local references and progress remain on the device, including after sign-in; the account view shows only server references. Before designing an import, the team should define identity matching, consent, conflict handling and deletion/export behavior. A teacher can access only their own draft and discovery records. Published graph versions are public.
+Account references, note nodes and manual links are visible only to their owner through row-level policies or owner-checked RPCs. Notes are limited to 1,000 characters. Browser-local records remain on the device after sign-in; account view shows only server records. Explicit import uses graph/concept keys and note UUIDs to deduplicate; unavailable or unpublished source versions reject the transaction. The local copy remains in the browser. A teacher can access only their own draft and discovery records. Published graph versions are public.
 
 ## Verification
 
-Run `node --test api/knowledge.test.mjs` and `python scripts/check_site.py`. The tests use mocked Supabase calls; they do not prove that a live project has the migration, keys or role assignments configured. After provisioning, verify teacher sign-in, draft isolation with a learner account, source discovery, publish, public read, duplicate reference, note persistence across devices and phone layout on a preview deployment before pointing learners to it.
+Run `node --test api/*.test.mjs` and `python scripts/check_site.py`. The tests use mocked Supabase calls; they do not prove that a live project has the migrations, keys or role assignments configured. After provisioning, verify teacher ownership across two accounts, draft isolation, publish, historical URLs, explicit import, duplicate references, personal edges and notes across devices, and phone layout on a preview deployment before pointing learners to it.

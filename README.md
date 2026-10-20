@@ -20,7 +20,7 @@ Open [http://localhost:8000](http://localhost:8000). On Windows, `py -m http.ser
 
 | Module                                | Folder            | Starting files                                    |
 | ------------------------------------- | ----------------- | ------------------------------------------------- |
-| Knowledge map and mini-courses        | `knowledge-map/`  | `index.html`, `style.css`, `script.js`, `data.js` |
+| Knowledge map and mini-courses        | `knowledge-map/`  | `index.html`, `graph.html`, `concept.html`, `question.html`, `case.html`, `teacher.html`, `network-core.js`, `data.js` |
 | Initial assessment and learning paths | `learning-path/`  | `index.html`, `style.css`, `script.js`            |
 | Mock interview and process review     | `interview/`      | `index.html`, `style.css`, `script.js`            |
 | AI-style answer correction            | `correction-lab/` | `index.html`, `style.css`, `script.js`            |
@@ -45,7 +45,7 @@ SkillLoop/
 
 ## Current behavior
 
-- Explore seven knowledge-map nodes, typed relationships, mini-lessons, a sourced historical event and a practice question. Reference nodes locally or in an account when the backend is configured.
+- Open a personal knowledge network, explore teacher graphs, follow separate knowledge/question/case pages and reference selected nodes. The sample graph has seven concepts and seven dedicated question links.
 - Choose a background and goal, answer a diagnostic question and open recommended lessons.
 - Save an interview answer, view a scripted follow-up and review answers, revisions and hints.
 - Write a counterexample to an authored code example and open a reference explanation.
@@ -55,7 +55,7 @@ Recommendations are rules-based. Interview questions and correction explanations
 
 The team's separate [Code Review Bureau prototype](https://sonic-fiddle-gzb7c64.vercel.app/bureau.html) is linked from the correction module. Its original source has not been imported into this repository. It can be integrated later when that source is available.
 
-Study marks and other module progress are saved in this browser's local storage. Knowledge-map account references can sync across devices when the backend is configured. Signing in does not automatically upload local references.
+Study marks and other module progress are saved in this browser's local storage. Knowledge-map account nodes and manual links can sync across devices when the backend is configured. Signing in does not automatically upload local records; students explicitly choose whether to import them.
 
 ## Working together
 
