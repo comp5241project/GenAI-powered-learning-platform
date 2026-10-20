@@ -4,7 +4,7 @@ Short software development lessons, personalised learning paths, mock interviews
 
 Live site: [skillloop-sigma.vercel.app](https://skillloop-sigma.vercel.app/).
 
-This repository is a **static prototype** built with HTML, CSS and JavaScript. There is no framework, package installation or build step. Each team member can work in one module folder.
+The four learning modules use plain HTML, CSS and JavaScript with no framework or build step. The knowledge-map module also has an optional server backend for teacher publishing, account references and AI-assisted source discovery. It needs separate Supabase and OpenAI configuration; the static sample continues to work without it.
 
 ## Run it locally
 
@@ -31,6 +31,8 @@ Each folder has its own README. Most work should stay inside the assigned folder
 SkillLoop/
   index.html                 Home and module entry points
   knowledge-map/             Module 1
+  api/                       Optional knowledge backend Vercel Function
+  supabase/migrations/        Knowledge backend schema and access rules
   learning-path/             Module 2
   interview/                 Module 3
   correction-lab/            Module 4
@@ -43,17 +45,17 @@ SkillLoop/
 
 ## Current behavior
 
-- Explore seven sample knowledge-map nodes, read mini-lessons and mark them as studied.
+- Explore seven knowledge-map nodes, typed relationships, mini-lessons, a sourced historical event and a practice question. Reference nodes locally or in an account when the backend is configured.
 - Choose a background and goal, answer a diagnostic question and open recommended lessons.
 - Save an interview answer, view a scripted follow-up and review answers, revisions and hints.
 - Write a counterexample to an authored code example and open a reference explanation.
 - Refresh or switch pages without losing browser-local progress.
 
-Recommendations are rules-based. Interview questions and correction explanations are preset. This starter does **not** call an AI service, execute submitted code, automatically grade open-ended answers, or provide accounts, a database or teacher administration.
+Recommendations are rules-based. Interview questions and correction explanations are preset. The knowledge-map teacher workspace can use an AI service to find source material when configured; it requires teacher review before publication. The other modules do not call an AI service, execute submitted code or automatically grade open-ended answers.
 
 The team's separate [Code Review Bureau prototype](https://sonic-fiddle-gzb7c64.vercel.app/bureau.html) is linked from the correction module. Its original source has not been imported into this repository. It can be integrated later when that source is available.
 
-Progress is saved in this browser's local storage. It is not synced between devices or visible to other users. Clearing site data removes it.
+Study marks and other module progress are saved in this browser's local storage. Knowledge-map account references can sync across devices when the backend is configured. Signing in does not automatically upload local references.
 
 ## Working together
 
@@ -76,11 +78,11 @@ Discuss changes to `shared/`, `vercel.json` and shared data contracts first. Kee
 python scripts/check_site.py
 ```
 
-This checks the expected module files, local HTML links, asset paths, duplicate IDs and hosting configuration. A GitHub Actions workflow runs the same checks on pushes and pull requests. When changing an interaction, also try it in the browser and refresh the page to check persistence.
+This checks the expected module files, local HTML links, asset paths, duplicate IDs and hosting configuration. For knowledge backend changes, also run `node --test api/knowledge.test.mjs`. GitHub Actions runs both checks on pushes and pull requests. When changing an interaction, also try it in the browser and refresh the page to check persistence.
 
 ## Deploy
 
-Import `comp5241project/SkillLoop` into Vercel as a static project. Use the repository root, select the **Other** preset, leave install and build commands empty, and serve the repository root (`.`). No environment variables are required for this prototype. See [deployment notes](docs/DEPLOYMENT.md).
+Import `comp5241project/SkillLoop` into Vercel with the **Other** preset, no install or build commands, and repository root (`.`) as output. No environment variables are needed for the static sample. Configure the knowledge backend separately using [backend setup](docs/KNOWLEDGE-BACKEND.md); see also [deployment notes](docs/DEPLOYMENT.md).
 
 ## References
 

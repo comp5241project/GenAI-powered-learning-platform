@@ -38,7 +38,7 @@ Storage keys are prefixed with `skillloop.v1.`. Use one key per module so pages 
 | Key          | Shape                                                     | Writer                          |
 | ------------ | --------------------------------------------------------- | ------------------------------- |
 | `profile`    | `{background, goal, diagnostic}`                          | learning-path                   |
-| `knowledge`  | `{selected, completed: conceptId[]}`                      | knowledge-map                   |
+| `knowledge`  | `{selected, completed: conceptId[], references?: Reference[]}` | knowledge-map              |
 | `interview`  | `{draft, events: [{label, detail}], hintUsed, hasAnswer}` | interview                       |
 | `correction` | `{draft, revealed, nextSeen, caseId}`                     | correction-lab                  |
 | `activity`   | `[{module, type, at, conceptId?, conceptIds?, caseId?}]`  | all modules through appendEvent |
@@ -47,4 +47,14 @@ Storage keys are prefixed with `skillloop.v1.`. Use one key per module so pages 
 
 Study completion is self-reported, not proof of mastery. Activity is capped at 100 entries and interview history at 40 entries. Draft inputs are capped at 5,000 characters. Stored content is shown using `textContent`, not injected HTML.
 
-These contracts are for a prototype, not an account system or database schema. When adding a backend, agree authentication, server-side validation and endpoint contracts together. Keep API credentials on the server.
+`Reference` is `{id, version, addedAt, title, description, note}`. `id` is a public concept ID, `version` is the publication seen when it was saved, and `title`/`description` are short snapshots used to explain later version changes. The optional array is deduplicated by `id` and remains in this browser. It does not affect `completed`. Existing data without `references` still loads. Signing in switches the knowledge-map view to account references; it does not silently upload browser data.
+
+## Knowledge backend contract
+
+The optional backend is a Vercel Function at `/api/knowledge`. `GET ?op=public` returns `{graph}` with the current published payload and needs no account. The browser falls back to `knowledge-map/data.js` when that endpoint has no published graph or the backend is unavailable. Public concept IDs above remain stable across versions.
+
+Account operations use same-origin, HttpOnly cookies. `GET ?op=session` returns `{signedIn, email?, role?}`; `POST ?op=login` accepts `{email,password}` and `POST ?op=logout` clears cookies. A teacher can `GET ?op=draft`, `POST ?op=draft` with `{payload,expectedRevision}`, and `POST ?op=publish` with `{revision,reviewed:true}`. Saving returns a new revision; stale revisions return HTTP 409. Learners cannot read unpublished drafts.
+
+Signed-in users can `GET ?op=references`, `POST ?op=reference` with `{conceptId}`, `POST ?op=note` with `{conceptId,note}`, and `POST ?op=unreference` with `{conceptId}`. The server resolves concept IDs against the current publication and snapshots the title, description and version. Duplicate references are idempotent. A teacher can `POST ?op=discover` with `{query}`; this returns a private research note and HTTPS source links, never a public event. See [backend setup](KNOWLEDGE-BACKEND.md) for schema, roles and configuration.
+
+The other modules still use browser-local prototype data. Do not treat a knowledge-map study mark as a server-side grade or automatically migrate local records. Keep API credentials on the server.

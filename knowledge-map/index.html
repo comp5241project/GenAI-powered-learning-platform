@@ -4,10 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f6f5f1" />
-    <meta
-      name="description"
-      content="SkillLoop: short software development lessons, personalised paths, interview practice and AI correction challenges."
-    />
+    <meta name="description" content="Explore SkillLoop's software development knowledge map, short lessons, sourced examples and practice." />
     <title>Skill map | SkillLoop</title>
     <link rel="icon" href="../public/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../shared/styles.css" />
@@ -27,152 +24,104 @@
         <main id="main-content" class="sl-main">
           <div class="sl-kicker">Your learning landscape</div>
           <h1>Build skills. Connect the dots.</h1>
-          <p class="sl-intro">A clearer path from understanding to doing.</p>
-          <div class="sl-card sl-tree-card">
+          <p class="sl-intro">Explore a public map, read short lessons, and keep concepts you want to revisit.</p>
+
+          <section class="sl-card sl-tree-card" aria-labelledby="sl-map-heading">
             <div class="sl-row sl-tree-top">
               <div class="sl-icon-title">
-                <i data-lucide="network" aria-hidden="true"> </i>
-                <h3>Software development</h3>
+                <i data-lucide="network" aria-hidden="true"></i>
+                <h2 id="sl-map-heading" class="sl-section-heading">Software development</h2>
               </div>
-              <span class="sl-chip">
-                <i data-lucide="compass" aria-hidden="true"> </i>Explore your next skill</span
-              >
+              <span class="sl-chip" id="sl-publication"></span>
             </div>
+            <p class="sl-small sl-map-hint">Select a concept to read its mini-course. Connections and their reasons are listed below the map.</p>
             <div class="sl-tree-bg">
-              <div
-                class="sl-graph"
-                aria-label="Foundations connect to requirements, code reading and testing, then communication, code review and edge cases"
-              >
-                <svg aria-hidden="true"></svg>
-                <button
-                  type="button"
-                  id="sl-n0"
-                  class="sl-node"
-                  data-status="done"
-                  aria-pressed="false"
-                >
-                  <span class="sl-node-icon">
-                    <i data-lucide="blocks" aria-hidden="true"> </i>
-                  </span>
-                  <span class="sl-node-title"
-                    >Foundations<span class="sl-node-state">Completed</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  id="sl-n1"
-                  class="sl-node"
-                  data-status="done"
-                  aria-pressed="false"
-                >
-                  <span class="sl-node-icon">
-                    <i data-lucide="list-checks" aria-hidden="true"> </i>
-                  </span>
-                  <span class="sl-node-title"
-                    >Requirements<span class="sl-node-state">Completed</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  id="sl-n2"
-                  class="sl-node"
-                  data-status="done"
-                  aria-pressed="false"
-                >
-                  <span class="sl-node-icon">
-                    <i data-lucide="code-xml" aria-hidden="true"> </i>
-                  </span>
-                  <span class="sl-node-title"
-                    >Code reading<span class="sl-node-state">Completed</span>
-                  </span>
-                </button>
-                <button type="button" id="sl-n3" class="sl-node" aria-pressed="true">
-                  <span class="sl-node-icon">
-                    <i data-lucide="flask-conical" aria-hidden="true"> </i>
-                  </span>
-                  <span class="sl-node-title"
-                    >Software testing<span class="sl-node-state">Recommended</span>
-                  </span>
-                </button>
-                <button type="button" id="sl-n4" class="sl-node" aria-pressed="false">
-                  <span class="sl-node-icon">
-                    <i data-lucide="messages-square" aria-hidden="true"> </i>
-                  </span>
-                  <span class="sl-node-title"
-                    >Communication<span class="sl-node-state">Up next</span>
-                  </span>
-                </button>
-                <button type="button" id="sl-n5" class="sl-node" aria-pressed="false">
-                  <span class="sl-node-icon">
-                    <i data-lucide="scan-line" aria-hidden="true"> </i>
-                  </span>
-                  <span class="sl-node-title"
-                    >AI code review<span class="sl-node-state">Up next</span>
-                  </span>
-                </button>
-                <button type="button" id="sl-n6" class="sl-node" aria-pressed="false">
-                  <span class="sl-node-icon">
-                    <i data-lucide="split" aria-hidden="true"> </i>
-                  </span>
-                  <span class="sl-node-title"
-                    >Edge cases<span class="sl-node-state">Up next</span>
-                  </span>
-                </button>
+              <div id="sl-graph" class="sl-graph" aria-label="Software development concepts">
+                <svg id="sl-lines" aria-hidden="true"></svg>
               </div>
             </div>
-            <div class="sl-detail" aria-live="polite">
+            <div class="sl-path" aria-label="Suggested core path">
+              <strong>Suggested core path</strong>
+              <span class="sl-small">Explore freely; nothing is locked.</span>
+              <ol id="sl-path-list"></ol>
+            </div>
+
+            <section class="sl-detail" aria-labelledby="sl-node-title">
               <div class="sl-row">
                 <div>
                   <div class="sl-detail-title">
-                    <i data-lucide="flask-conical" id="sl-detail-icon" aria-hidden="true"> </i>
-                    <span id="sl-node-title">Software testing</span>
+                    <i data-lucide="flask-conical" id="sl-detail-icon" aria-hidden="true"></i>
+                    <h2 id="sl-node-title" class="sl-section-heading">Software testing</h2>
                   </div>
-                  <div id="sl-node-desc" class="sl-small">
-                    Check behavior, not just whether code runs.
-                  </div>
+                  <p id="sl-node-desc" class="sl-small"></p>
                 </div>
-                <button class="sl-btn sl-btn-main" type="button" id="sl-lesson">
-                  Open lesson<i data-lucide="arrow-up-right" aria-hidden="true"> </i>
-                </button>
+                <div class="sl-actions">
+                  <button class="sl-btn sl-btn-main" type="button" id="sl-lesson" aria-expanded="false" aria-controls="sl-lesson-body">Open lesson</button>
+                  <button class="sl-btn" type="button" id="sl-reference">Reference in my map</button>
+                </div>
               </div>
-              <div id="sl-lesson-body" hidden style="margin-top: 15px">
-                <p id="sl-lesson-text">
-                  Compare actual and expected results. Try normal, empty and invalid inputs.
-                </p>
-                <a class="sl-btn" href="../correction-lab/" style="margin-top: 12px"
-                  >Try a challenge<i data-lucide="arrow-right" aria-hidden="true"> </i>
-                </a>
+              <p class="sl-small sl-local-note" id="sl-reference-status" role="status" aria-live="polite"></p>
+              <div id="sl-lesson-body" class="sl-lesson-body" hidden>
+                <p class="sl-kicker">Mini-course</p>
+                <h3>Learning goal</h3><p id="sl-lesson-goal"></p>
+                <h3>In brief</h3><p id="sl-lesson-text"></p>
+                <h3>Example</h3><p id="sl-lesson-example"></p>
+                <h3>Try it</h3><p id="sl-lesson-action"></p>
+                <div class="sl-actions sl-lesson-actions">
+                  <button class="sl-btn" type="button" id="sl-mark"></button>
+                  <a class="sl-btn" id="sl-practice-link" href="../correction-lab/" hidden>Open related challenge <span aria-hidden="true">↗</span></a>
+                </div>
+                <section id="sl-activity" class="sl-activity" aria-label="Short practice question" hidden>
+                  <p class="sl-kicker">Relation check · practice only</p>
+                  <h3 id="sl-activity-prompt"></h3>
+                  <div id="sl-activity-options" role="group" aria-label="Choose an answer"></div>
+                  <button class="sl-btn" type="button" id="sl-check-answer" disabled>Check answer</button>
+                  <p id="sl-activity-feedback" class="sl-feedback" role="status" hidden></p>
+                </section>
               </div>
-            </div>
+            </section>
+          </section>
+
+          <div class="sl-grid sl-map-grid">
+            <section class="sl-card" aria-labelledby="sl-relations-heading">
+              <h2 id="sl-relations-heading" class="sl-section-heading">How concepts connect</h2>
+              <p class="sl-small">Select a relationship to see its direction and reason.</p>
+              <div id="sl-relations" class="sl-relations"></div>
+              <div id="sl-relation-detail" class="sl-relation-detail" role="status" aria-live="polite"></div>
+            </section>
+            <section class="sl-card" aria-labelledby="sl-personal-heading">
+              <h2 id="sl-personal-heading" class="sl-section-heading">My referenced concepts</h2>
+              <p class="sl-small" id="sl-storage-note">Saved only in this browser. Referencing a node does not mark it as studied.</p>
+              <div class="sl-account" id="sl-account">
+                <form id="sl-login-form" hidden>
+                  <label>Email <input id="sl-email" type="email" autocomplete="username" required /></label>
+                  <label>Password <input id="sl-password" type="password" autocomplete="current-password" required /></label>
+                  <button class="sl-btn" type="submit">Sign in to sync references</button>
+                </form>
+                <div class="sl-actions">
+                  <button class="sl-text-button" id="sl-show-login" type="button" hidden>Use my account</button>
+                  <button class="sl-text-button" id="sl-logout" type="button" hidden>Sign out</button>
+                  <a class="sl-text-button" href="teacher.html">Teacher workspace</a>
+                </div>
+                <p class="sl-small" id="sl-account-status" role="status" aria-live="polite"></p>
+              </div>
+              <div id="sl-personal-list" class="sl-personal-list"></div>
+              <div id="sl-note-wrap" class="sl-note-wrap" hidden>
+                <label for="sl-note">Personal note for the selected concept</label>
+                <textarea id="sl-note" maxlength="1000" placeholder="What do you want to remember?"></textarea>
+                <p id="sl-version-note" class="sl-small"></p>
+                <button class="sl-text-button" type="button" id="sl-remove-reference">Remove this reference</button>
+              </div>
+            </section>
           </div>
-          <div class="sl-grid">
-            <a class="sl-card sl-entry" href="../interview/">
-              <div class="sl-row">
-                <span class="sl-feature-icon">
-                  <i data-lucide="audio-lines" aria-hidden="true"> </i>
-                </span>
-                <i data-lucide="arrow-up-right" aria-hidden="true"> </i>
-              </div>
-              <h3>Think it through. Say it clearly.</h3>
-              <p class="sl-small">Mock interviews with a process replay.</p>
-            </a>
-            <a class="sl-card sl-entry" href="../learning-path/">
-              <div class="sl-row">
-                <span class="sl-feature-icon">
-                  <i data-lucide="signpost" aria-hidden="true"> </i>
-                </span>
-                <i data-lucide="arrow-up-right" aria-hidden="true"> </i>
-              </div>
-              <h3>Your starting point. Your pace.</h3>
-              <p class="sl-small">A path shaped around your experience.</p>
-            </a>
-          </div>
+
+          <section id="sl-events-section" class="sl-card sl-events-card" aria-labelledby="sl-events-heading">
+            <h2 id="sl-events-heading" class="sl-section-heading">A real-world connection</h2>
+            <div id="sl-events"></div>
+          </section>
         </main>
       </div>
     </div>
-    <noscript
-      >Please enable JavaScript to use the interactive exercises.
-      <a href="../index.html">Home</a></noscript
-    >
+    <noscript>Please enable JavaScript to use the interactive map. <a href="../index.html">Home</a></noscript>
   </body>
 </html>
