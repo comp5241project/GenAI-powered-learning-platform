@@ -4,6 +4,6 @@
   "installCommand": "",
   "buildCommand": "",
   "outputDirectory": ".",
-  "cleanUrls": false,
+  "cleanUrls": true,
   "trailingSlash": true
 }
