@@ -13,7 +13,7 @@
     const events = graph.events || [];
     const relations = graph.relations || [];
     const breadcrumbs = $('#kn-breadcrumbs');
-    breadcrumbs.append(link('My network', 'index.html'));
+    breadcrumbs.append(link('My network', '/knowledge-map/'));
     if (page !== 'graph') breadcrumbs.append(link(graph.publication.title, K.href('graph')));
     status(`${preview ? 'Private draft preview' : sample ? 'Curated sample' : 'Published'} · version ${graph.publication.version}`);
     if (page === 'graph') {

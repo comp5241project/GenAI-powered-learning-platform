@@ -15,11 +15,11 @@
     const query = new URLSearchParams({ graph: graphId,
       ...(params.get('version') ? { version: params.get('version') } : {}),
       ...(params.get('draftPreview') === '1' ? { draftPreview: '1' } : {}), ...extra });
-    return `${page}.html?${query}`;
+    return `/knowledge-map/${page}.html?${query}`;
   }
   async function api(op, method = 'GET', body, extra = {}) {
     const query = new URLSearchParams({ op, ...extra });
-    const response = await fetch(`../api/knowledge?${query}`, {
+    const response = await fetch(`/api/knowledge?${query}`, {
       method, credentials: 'same-origin',
       ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
     });

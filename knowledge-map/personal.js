@@ -69,8 +69,8 @@
     if (node.kind === 'reference') {
       box.append(K.make('p', '', node.descriptionSnapshot || 'Teacher concept'));
       const origin = K.make('a', '', `Teacher source · ${node.graphId} · version ${node.sourceVersion}`);
-      origin.href = `concept.html?${new URLSearchParams({ graph: node.graphId, topic: node.conceptId,
-        ...(node.sourceVersion && node.sourceVersion !== 'unknown' ? { version: node.sourceVersion } : {}) })}`;
+      origin.href = K.href('concept', { graph: node.graphId, topic: node.conceptId,
+        ...(node.sourceVersion && node.sourceVersion !== 'unknown' ? { version: node.sourceVersion } : {}) });
       box.append(origin);
     }
     const label = K.make('label', '', node.kind === 'note' ? 'My note' : 'Personal note about this reference');
@@ -174,12 +174,16 @@
   $('#kn-login').addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
+    const button = form.querySelector('button[type=submit]');
+    button.disabled = true;
+    status('Signing in…');
     try {
       await K.api('login', 'POST', { email: form.elements.email.value, password: form.elements.password.value });
       form.elements.password.value = '';
       signedIn = true; await loadAccount(); accountUI();
       status('Signed in. Browser records stay local until you choose Import.');
-    } catch (error) { status(error.message); }
+    } catch (error) { status(`Sign in failed: ${error.message}`); }
+    finally { button.disabled = false; }
   });
   $('#kn-logout').addEventListener('click', async () => {
     try { await K.api('logout', 'POST', {}); } catch { /* Local view still switches back. */ }
@@ -196,5 +200,6 @@
   try {
     const session = await K.api('session');
     if (session.signedIn) { signedIn = true; await loadAccount(); accountUI(); status(`Signed in as ${session.email}.`); }
+    else if (!session.backendConfigured) status('Browser-only mode: sign-in needs the Supabase URL and publishable key in the deployment. The sample graph and local notes still work.');
   } catch { status('Your browser records stay on this device. Account sync is unavailable here.'); }
 })();

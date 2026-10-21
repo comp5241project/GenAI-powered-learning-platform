@@ -34,6 +34,21 @@ async function withBackend(mock, run) {
 
 function reply(data, status = 200) { return Response.json(data, { status }); }
 
+test('session reports when account backend is unavailable', async () => {
+  const previousUrl = process.env.SUPABASE_URL;
+  const previousKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+  delete process.env.SUPABASE_URL;
+  delete process.env.SUPABASE_PUBLISHABLE_KEY;
+  try {
+    const response = await handler.fetch(request('session'));
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { signedIn: false, backendConfigured: false });
+  } finally {
+    if (previousUrl !== undefined) process.env.SUPABASE_URL = previousUrl;
+    if (previousKey !== undefined) process.env.SUPABASE_PUBLISHABLE_KEY = previousKey;
+  }
+});
+
 test('sample graph is valid and broken links are rejected', () => {
   assert.equal(validateGraph(sample), sample);
   const broken = structuredClone(sample);

@@ -10,13 +10,13 @@ The four module pages are plain static files. The optional knowledge backend run
 4. Leave Build Command and Install Command empty. Use `.` as Output Directory if Vercel asks for one.
 5. Deploy. The static sample needs no environment variables or database. To enable teacher publishing and account references, follow [knowledge backend setup](KNOWLEDGE-BACKEND.md) and redeploy with its server environment variables.
 
-The root contains `index.html`. Each module has its own `index.html`; directory URLs such as `/interview/` therefore work directly. `vercel.json` sets the framework to Other, skips installation and building, and serves the repository root. It also enables clean URLs and trailing slashes. Do not add a rewrite that sends every URL to the home page: this is a multi-page site.
+The root contains `index.html`. Each module has its own `index.html`; directory URLs such as `/interview/` therefore work directly. `vercel.json` sets the framework to Other, skips installation and building, and serves the repository root. It keeps `.html` URLs intact for cross-page links and enables trailing slashes for directory URLs. Knowledge-map assets and API calls use root-relative URLs so direct visits and refreshes work from every page. Do not add a rewrite that sends every URL to the home page: this is a multi-page site.
 
 After connecting the repository, Vercel can deploy new main commits and provide branch/PR previews, subject to the project's Git integration settings. Pushing this repository alone does not create or confirm a Vercel deployment.
 
 ## Check the deployment
 
-- Open all four module URLs directly and refresh them. For knowledge-map, also check the personal entry, a published `graph.html?graph=...` link and direct concept, question and case URLs.
+- Open all four module URLs directly and refresh them. For knowledge-map, also check the personal entry, the sample `graph.html?graph=software-development` link and direct concept, question and case URLs. The sample works before Supabase is configured; teacher editing and account sign-in need the backend variables and appropriate accounts.
 - Use the sidebar and the brand link back to the home page.
 - Create a learning path and follow one of its lesson links.
 - Save and revise an interview answer; refresh and check the replay.

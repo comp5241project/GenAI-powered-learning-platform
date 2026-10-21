@@ -133,7 +133,7 @@
     form.elements.version.value = draft.publication.version;
     form.elements.date.value = draft.publication.publishedAt;
     renderGraph(); selectTopic(selectedId); controls();
-    const share = new URL(`graph.html?graph=${encodeURIComponent(graphId)}`, location.href);
+    const share = new URL(K.href('graph', { graph: graphId }), location.origin);
     $('#teacher-share').replaceChildren(document.createTextNode('Published share link: '));
     const anchor = K.make('a', '', share.href); anchor.href = share.href; $('#teacher-share').append(anchor);
     msg(revision ? `Loaded private draft ${revision}.` : 'Sample content loaded. Save a draft before publishing.');
@@ -141,13 +141,17 @@
   $('#teacher-login').addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
+    const button = form.querySelector('button[type=submit]');
+    button.disabled = true;
+    $('#teacher-status').textContent = 'Signing in…';
     try {
       await K.api('login', 'POST', { email: formValue(form, 'email'), password: form.elements.password.value });
       form.elements.password.value = '';
       const session = await K.api('session');
       if (session.role !== 'teacher') throw new Error('Teacher role required.');
       signedIn = true; controls(); await graphs(); $('#teacher-status').textContent = `Signed in as ${session.email}.`;
-    } catch (error) { $('#teacher-status').textContent = error.message; }
+    } catch (error) { $('#teacher-status').textContent = `Sign in failed: ${error.message}`; }
+    finally { button.disabled = false; }
   });
   $('#teacher-logout').addEventListener('click', async () => {
     try { await K.api('logout', 'POST', {}); } catch { /* Close editor locally. */ }
@@ -274,7 +278,7 @@
     }
     sessionStorage.setItem('skillloop.knowledge.preview', JSON.stringify(draft));
     const frame = $('#teacher-frame'); frame.hidden = false;
-    frame.src = `${page}.html?${new URLSearchParams(query)}`;
+    frame.src = K.href(page, query);
     msg(`Previewing current ${page} draft. Save this version before publishing.`);
   }
   for (const [id, page] of [['teacher-preview','graph'], ['teacher-preview-concept','concept'],
@@ -309,5 +313,7 @@
     if (session.signedIn && session.role === 'teacher') {
       signedIn = true; controls(); await graphs(); $('#teacher-status').textContent = `Signed in as ${session.email}.`;
     } else if (session.signedIn) $('#teacher-status').textContent = 'Teacher role required.';
-  } catch { $('#teacher-status').textContent = 'Sign in when the knowledge backend is configured.'; }
+    else if (!session.backendConfigured) $('#teacher-status').textContent = 'Teacher editing needs the Supabase URL and publishable key configured in this deployment, plus a teacher account. You can explore the sample public graph without signing in.';
+    else $('#teacher-status').textContent = 'Sign in with a teacher account to edit and publish graphs.';
+  } catch { $('#teacher-status').textContent = 'Teacher sign-in is unavailable. Check the knowledge backend deployment settings.'; }
 })();

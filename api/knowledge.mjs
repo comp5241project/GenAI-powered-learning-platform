@@ -223,7 +223,9 @@ async function handle(request) {
   if (request.method === 'POST' && op === 'logout') return json({ signedIn: false }, 200, clearCookies(request));
   if (request.method === 'GET' && op === 'session') {
     const auth = await session(request, false);
-    return withSession(auth ? { signedIn: true, email: auth.user.email, role: auth.role } : { signedIn: false }, auth, request);
+    const backendConfigured = Boolean(process.env.SUPABASE_PUBLISHABLE_KEY && /^https:\/\//.test(process.env.SUPABASE_URL || ''));
+    return withSession(auth ? { signedIn: true, email: auth.user.email, role: auth.role, backendConfigured }
+      : { signedIn: false, backendConfigured }, auth, request);
   }
   const auth = await session(request);
   if (request.method === 'GET' && op === 'my-graphs') {
