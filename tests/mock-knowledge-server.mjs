@@ -8,8 +8,19 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 globalThis.window = {};
 await import('../knowledge-map/data.js');
 const sample = structuredClone(window.SkillLoopGraph);
+const large = structuredClone(sample);
+large.publication.id = 'large-class'; large.publication.title = 'Large graph browser fixture';
+large.topics = Array.from({ length: 300 }, (_, index) => ({ ...structuredClone(sample.topics[0]),
+  id: `concept-${index}`, title: `Concept ${index}`, order: index + 1,
+  position: { x: index % 20 * 210, y: Math.floor(index / 20) * 120 } }));
+large.relations = Array.from({ length: 299 }, (_, index) => ({ id: `edge-${index}`,
+  source: `concept-${index}`, target: `concept-${index + 1}`, type: 'related',
+  reason: 'This concept is linked to the next concept in the course.' }));
+large.events = []; large.activities = []; large.questions = [];
 const graphs = new Map([['software-development', { id: 'software-development', title: sample.publication.title,
-  current_version: null, revision: crypto.randomUUID(), payload: sample }]]);
+  current_version: null, revision: crypto.randomUUID(), payload: sample }],
+['large-class', { id: 'large-class', title: large.publication.title, current_version: large.publication.version,
+  revision: crypto.randomUUID(), payload: large }]]);
 const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
 function respond(res, status, data) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -24,6 +35,7 @@ createServer(async (req, res) => {
       const graphId = url.searchParams.get('graph') || input.graphId || 'software-development';
       const graph = graphs.get(graphId);
       if (op === 'session') return respond(res, 200, { signedIn: true, role: 'teacher', email: 'mock-teacher@example.test' });
+      if (op === 'reference') return respond(res, 503, { error: 'Knowledge service unavailable.' });
       if (op === 'my-graphs') return respond(res, 200, { graphs: [...graphs.values()].map(({ id, title, current_version }) =>
         ({ id, title, current_version })) });
       if (op === 'draft') {
@@ -43,6 +55,8 @@ createServer(async (req, res) => {
       }
       if (op === 'publish') {
         if (!graph || input.revision !== graph.revision) return respond(res, 409, { error: 'Draft changed' });
+        // Give the browser walkthrough time to edit while publication is in flight.
+        await new Promise((resolve) => setTimeout(resolve, 1500));
         graph.current_version = graph.payload.publication.version;
         return respond(res, 200, { version: graph.current_version });
       }
@@ -63,4 +77,5 @@ createServer(async (req, res) => {
       'Cache-Control': 'no-store' });
     res.end(content);
   } catch { respond(res, 404, { error: 'Not found' }); }
-}).listen(8001, '127.0.0.1', () => console.log('Mock knowledge browser server on http://localhost:8001'));
+}).listen(Number(process.env.MOCK_PORT) || 8001, '127.0.0.1', () =>
+  console.log(`Mock knowledge browser server on http://localhost:${Number(process.env.MOCK_PORT) || 8001}`));

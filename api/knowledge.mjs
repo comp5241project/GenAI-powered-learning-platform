@@ -159,6 +159,29 @@ async function publicGraph(id = defaultGraphId, requestedVersion) {
   return publications[0].payload;
 }
 
+async function publicGraphs(page) {
+  const pageNumber = page === null ? 0 : Number(page);
+  if (!Number.isSafeInteger(pageNumber) || pageNumber < 0 || pageNumber > 10000 || String(pageNumber) !== (page ?? '0'))
+    throw new HttpError(400, 'Invalid directory page.');
+  const pageSize = 24;
+  const rows = await supabase('/rest/v1/skillloop_graphs', { query: {
+    select: 'id,title,current_version', current_version: 'not.is.null', order: 'created_at.desc,id.asc',
+    limit: String(pageSize + 1), offset: String(pageNumber * pageSize),
+  } });
+  const results = await Promise.allSettled((rows || []).slice(0, pageSize).map(async (row) => {
+      const graph = await publicGraph(row.id, row.current_version);
+      const topics = (graph.topics || []).filter((topic) => !topic.archived);
+      return { id: row.id, title: row.title, version: row.current_version,
+        description: typeof graph.publication?.description === 'string' && graph.publication.description.trim()
+          ? graph.publication.description.trim()
+          : `Explore ${topics.slice(0, 3).map((topic) => topic.title).join(', ')}${topics.length > 3 ? ' and more' : ''}.`,
+        conceptCount: topics.length };
+  }));
+  return { graphs: results.filter((result) => result.status === 'fulfilled').map((result) => result.value),
+    unavailableCount: results.filter((result) => result.status === 'rejected').length,
+    hasMore: (rows || []).length > pageSize };
+}
+
 function canonicalSources(output) {
   const found = new Map();
   for (const item of output || []) {
@@ -212,6 +235,7 @@ async function handle(request) {
     if (origin && origin !== url.origin) throw new HttpError(403, 'Cross-origin request rejected.');
   }
   if (request.method === 'GET' && op === 'public') return json({ graph: await publicGraph(graphFrom(url), url.searchParams.get('version')) });
+  if (request.method === 'GET' && op === 'public-graphs') return json(await publicGraphs(url.searchParams.get('page')));
   if (request.method === 'POST' && op === 'login') {
     const { email, password } = await bodyJson(request);
     if (typeof email !== 'string' || email.length > 320 || typeof password !== 'string' || password.length > 1000)
@@ -352,6 +376,18 @@ async function handle(request) {
       body: { p_id: uuid(input.id, 'edge ID'), p_source: personalKey(input.source),
         p_target: personalKey(input.target), p_reason: reason } });
     return withSession({ ok: true, created }, auth, request);
+  }
+  if (request.method === 'POST' && op === 'update-personal-edge') {
+    const input = await bodyJson(request);
+    const reason = input.reason?.trim();
+    if (typeof reason !== 'string' || !reason.length || reason.length > 280)
+      throw new HttpError(400, 'Invalid connection reason.');
+    const id = uuid(input.id, 'edge ID');
+    const updated = await supabase('/rest/v1/skillloop_personal_edges', { method: 'PATCH', token: auth.token,
+      query: { select: 'id,reason', id: `eq.${id}`, user_id: `eq.${auth.user.id}` },
+      body: { reason }, prefer: 'return=representation' });
+    if (!updated?.length) throw new HttpError(404, 'Personal connection not found.');
+    return withSession({ edge: updated[0] }, auth, request);
   }
   if (request.method === 'POST' && op === 'remove-personal-edge') {
     const input = await bodyJson(request);

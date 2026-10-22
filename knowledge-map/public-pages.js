@@ -5,6 +5,31 @@
   const params = new URLSearchParams(location.search);
   const link = (label, href) => { const a = K.make('a', '', label); a.href = href; return a; };
   const status = (message) => { $('#kn-status').textContent = message; };
+  function renderActivities(host, activities) {
+    host.replaceChildren();
+    for (const activity of activities) {
+      const form = K.make('form', 'kn-activity');
+      const fieldset = K.make('fieldset');
+      fieldset.append(K.make('legend', '', activity.prompt));
+      activity.options.forEach((option, index) => {
+        const label = K.make('label', 'kn-choice');
+        const input = K.make('input');
+        input.type = 'radio'; input.name = `activity-${activity.id}`; input.value = String(index);
+        label.append(input, document.createTextNode(option));
+        fieldset.append(label);
+      });
+      const check = K.make('button', 'sl-btn', 'Check answer'); check.type = 'submit';
+      const feedback = K.make('p'); feedback.setAttribute('role', 'status');
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const checked = form.querySelector('input:checked');
+        feedback.textContent = checked
+          ? `${Number(checked.value) === activity.answerIndex ? 'Correct. ' : 'Try again. '}${activity.feedback}`
+          : 'Choose an answer first.';
+      });
+      form.append(fieldset, check, feedback); host.append(form);
+    }
+  }
   try {
     const { graph, preview, sample } = await K.loadGraph();
     const topics = new Map(graph.topics.map((topic) => [topic.id, topic]));
@@ -13,15 +38,16 @@
     const events = graph.events || [];
     const relations = graph.relations || [];
     const breadcrumbs = $('#kn-breadcrumbs');
-    breadcrumbs.append(link('My network', '/knowledge-map/'));
+    breadcrumbs.append(link('Explore', '/knowledge-map/explore.html'));
     if (page !== 'graph') breadcrumbs.append(link(graph.publication.title, K.href('graph')));
     status(`${preview ? 'Private draft preview' : sample ? 'Curated sample' : 'Published'} · version ${graph.publication.version}`);
     if (page === 'graph') {
       $('#kn-title').textContent = graph.publication.title;
-      const canvas = new K.Canvas($('#kn-canvas'), { onSelect: showSelection });
+      const canvas = new K.Canvas($('#kn-canvas'), { onSelect: showSelection, onSelectEdge: showRelationship });
       canvas.set(active, relations.filter((relation) => topics.has(relation.source) && topics.has(relation.target)));
       $('#kn-zoom-in').addEventListener('click', () => canvas.zoom(1.2));
       $('#kn-zoom-out').addEventListener('click', () => canvas.zoom(1 / 1.2));
+      $('#kn-reset').addEventListener('click', () => canvas.resetView());
       const list = $('#kn-list');
       function renderList() {
         const query = $('#kn-search').value.trim().toLowerCase();
@@ -35,6 +61,7 @@
           fragment.append(button);
         }
         list.append(fragment);
+        canvas.highlight(query);
         if (!list.childElementCount) list.textContent = 'No matching concepts.';
       }
       $('#kn-search').addEventListener('input', renderList);
@@ -51,10 +78,29 @@
           const otherId = relation.source === id ? relation.target : relation.source;
           const other = topics.get(otherId);
           if (!other) continue;
-          const p = K.make('p', '', `${topics.get(relation.source)?.title} → ${topics.get(relation.target)?.title}: ${relation.reason}`);
-          p.append(' ', link(`Open ${other.title}`, K.href('concept', { topic: otherId })));
-          details.append(p);
+          const button = K.make('button', 'kn-list-button', `${topics.get(relation.source)?.title} → ${topics.get(relation.target)?.title}: ${relation.reason}`);
+          button.type = 'button';
+          button.addEventListener('click', () => canvas.selectEdge(relation.id));
+          details.append(button);
         }
+      }
+      function showRelationship(relation) {
+        const from = topics.get(relation.source), to = topics.get(relation.target);
+        const details = $('#kn-relations');
+        const focusFromList = details.contains(document.activeElement);
+        const heading = $('#kn-selected-title');
+        heading.textContent = `${from?.title || relation.source} → ${to?.title || relation.target}`;
+        const selected = $('#kn-selected');
+        selected.replaceChildren(
+          K.make('p', '', `Type: ${relation.type}. Direction: ${from?.title || relation.source} to ${to?.title || relation.target}.`),
+          K.make('p', '', `Why connected: ${relation.reason}`),
+          K.make('p', '', `Source: ${preview ? 'private teacher draft' : sample ? 'curated sample' : 'teacher published graph'} · version ${graph.publication.version}.`),
+          link(`Open ${from?.title || relation.source}`, K.href('concept', { topic: relation.source })),
+          link(`Open ${to?.title || relation.target}`, K.href('concept', { topic: relation.target })));
+        const relatedActivities = (graph.activities || []).filter((activity) => activity.relationId === relation.id);
+        if (relatedActivities.length) renderActivities(details, relatedActivities);
+        else details.replaceChildren(K.make('p', '', 'Choose a concept to browse its other connections.'));
+        if (focusFromList) { heading.tabIndex = -1; heading.focus(); }
       }
       if (active.length) canvas.focus(active[0].id);
       return;
@@ -75,39 +121,59 @@
         pages.append(link(`Practice: ${question.prompt}`, K.href('question', { question: question.id })));
       for (const event of events.filter((item) => !item.archived && item.links.some((entry) => entry.topicId === topic.id)))
         pages.append(link(`Case: ${event.title}`, K.href('case', { case: event.id, topic: topic.id })));
+      const practice = $('#kn-practice-link');
+      if (topic.practiceHref) { practice.href = topic.practiceHref; practice.hidden = false; }
+      const activities = (graph.activities || []).filter((activity) => activity.topicIds.includes(topic.id));
+      $('#kn-activities-section').hidden = !activities.length;
+      if (activities.length) renderActivities($('#kn-activities'), activities);
       if (!pages.childElementCount) pages.textContent = 'More materials will appear when the teacher publishes them.';
-      $('#kn-reference').addEventListener('click', async () => {
+      const referenceLocally = () => {
+        const created = K.referenceNode(graph, topic, K.local());
+        const persisted = window.SkillLoop.storageAvailable();
+        if (!persisted) return created
+          ? 'Reference could not be saved because browser storage is unavailable. It will not appear in My Knowledge after navigation.'
+          : 'Reference is in memory only and will be lost after navigation; browser storage is unavailable.';
+        return created ? 'Referenced in this browser. Open My Knowledge to see it.' : 'Already in this browser network.';
+      };
+      const referenceButton = $('#kn-reference');
+      referenceButton.addEventListener('click', async () => {
+        referenceButton.disabled = true;
+        let accountSession = false;
         try {
           const session = await K.api('session');
           if (session.signedIn) {
+            accountSession = true;
             const result = await K.api('reference', 'POST', { graphId: graph.publication.id,
               conceptId: topic.id, sourceVersion: graph.publication.version });
             status(result.created ? 'Referenced in your account network.' : 'Already in your account network.');
           } else {
-            status(K.referenceNode(graph, topic, K.local()) ? 'Referenced in this browser. Open My network to see it.' : 'Already in this browser network.');
+            status(referenceLocally());
           }
         } catch (error) {
-          if (/configured|unavailable|Failed to fetch/i.test(error.message))
-            status(K.referenceNode(graph, topic, K.local()) ? 'Referenced in this browser.' : 'Already referenced in this browser.');
+          if (accountSession) status(`Account reference was not saved: ${error.message} Your browser records were not changed.`);
+          else if (/configured|unavailable|Failed to fetch/i.test(error.message))
+            status(`Account status could not be checked. ${referenceLocally()}`);
           else status(error.message);
-        }
+        } finally { referenceButton.disabled = false; }
       });
       const mark = $('#kn-studied');
       const old = K.legacy();
+      const legacyCompleted = Array.isArray(old.completed) ? old.completed : [];
       const studied = new Set(window.SkillLoop.read('knowledgeStudyV2',
-        (old.completed || []).map((id) => `${K.sampleId}:${id}`)));
+        legacyCompleted.map((id) => `${K.sampleId}:${id}`)));
       const markKey = `${graph.publication.id}:${topic.id}`;
       mark.textContent = studied.has(markKey) ? 'Remove studied mark' : 'Mark as studied';
       mark.addEventListener('click', () => {
         if (studied.has(markKey)) studied.delete(markKey); else studied.add(markKey);
-        window.SkillLoop.write('knowledgeStudyV2', [...studied]);
-        if (graph.publication.id === K.sampleId) {
-          const completed = new Set(old.completed || []);
+        const persisted = window.SkillLoop.write('knowledgeStudyV2', [...studied]);
+        if (persisted && graph.publication.id === K.sampleId &&
+            (old.completed == null || Array.isArray(old.completed))) {
+          const completed = new Set(legacyCompleted);
           if (studied.has(markKey)) completed.add(topic.id); else completed.delete(topic.id);
           window.SkillLoop.write('knowledge', { ...old, completed: [...completed] });
         }
         mark.textContent = studied.has(markKey) ? 'Remove studied mark' : 'Mark as studied';
-        status('Study mark saved in this browser.');
+        status(persisted ? 'Study mark saved in this browser. This is self-reported, not a test score.' : 'Study mark is visible on this page only; reload or navigation will lose it because browser storage is unavailable.');
       });
       return;
     }
@@ -157,5 +223,12 @@
   } catch (error) {
     $('#kn-title').textContent = 'This page is unavailable';
     status(error.message);
+    const main = $('#main-content');
+    for (const section of main.querySelectorAll(':scope > section, :scope > .kn-explorer-layout')) section.hidden = true;
+    const recovery = K.make('section', 'sl-card');
+    recovery.append(K.make('h2', '', 'Continue exploring'),
+      K.make('p', '', 'The requested knowledge content could not be loaded. Check the link or try another published resource.'),
+      link('Browse Explore', '/knowledge-map/explore.html'));
+    main.append(recovery);
   }
 })();

@@ -1,5 +1,7 @@
 # Knowledge network - module 1
 
+The [architecture and UX audit](docs/ARCHITECTURE-UX-AUDIT.md) records the current information architecture, user flows, implementation boundaries and refactoring risks.
+
 `/knowledge-map/` opens the student's personal network. The former learning-path links such as
 `/knowledge-map/?topic=software-testing` redirect to the sample graph's knowledge page.
 

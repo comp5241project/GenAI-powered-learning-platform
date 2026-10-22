@@ -27,6 +27,9 @@ async function backend(mock, run) {
 }
 
 test('seven seed concepts have dedicated valid questions and a 300-node graph validates', () => {
+  assert.deepEqual(sample.topics.map((topic) => topic.id), [
+    'foundations', 'requirements', 'code-reading', 'software-testing', 'communication', 'ai-code-review', 'edge-cases',
+  ]);
   assert.equal(new Set(sample.questions.map((question) => question.topicId)).size, 7);
   assert.equal(validateGraph(sample), sample);
   const large = structuredClone(sample);
@@ -112,5 +115,28 @@ test('referencing a historical version uses the version-aware RPC', async () => 
     assert.equal(response.status, 200);
     assert.equal(rpcBody.p_version, 'v1');
     assert.equal(rpcBody.p_graph, 'graph-one');
+  });
+});
+
+test('personal connection reason update is scoped to the signed-in owner', async () => {
+  const edgeId = '22222222-2222-4222-8222-222222222222';
+  let patchRequest;
+  await backend(async (url, options) => {
+    const parsed = new URL(url);
+    if (parsed.pathname.endsWith('/user')) return reply({ id: 'student-id', email: 'student@example.test' });
+    if (parsed.pathname.endsWith('skillloop_roles')) return reply([]);
+    if (parsed.pathname.endsWith('skillloop_personal_edges')) {
+      patchRequest = { parsed, options };
+      return reply([{ id: edgeId, reason: 'Updated reason' }]);
+    }
+    throw new Error(`Unexpected ${url}`);
+  }, async () => {
+    const response = await handler.fetch(request('update-personal-edge', 'POST',
+      { id: edgeId, reason: 'Updated reason' }, '', 'student-token'));
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).edge.reason, 'Updated reason');
+    assert.equal(patchRequest.options.method, 'PATCH');
+    assert.equal(patchRequest.parsed.searchParams.get('user_id'), 'eq.student-id');
+    assert.deepEqual(JSON.parse(patchRequest.options.body), { reason: 'Updated reason' });
   });
 });

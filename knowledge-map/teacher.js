@@ -2,18 +2,43 @@
   const K = window.KnowledgeNetwork;
   const $ = K.$;
   let signedIn = false, graphId = null, draft = null, revision = null, dirty = false, selectedId = null;
+  let saving = false, publishing = false, editSequence = 0, loadSequence = 0, backendAvailable = true;
+  const pendingForms = new Set();
   let graphList = [];
   const canvas = new K.Canvas($('#teacher-canvas'), { editable: true, onSelect: selectTopic,
-    onMove: (topic) => { topic.position = { x: topic.x, y: topic.y }; changed(); } });
+    onSelectEdge: selectRelation,
+    onMove: (topic) => {
+      const stored = draft?.topics.find((item) => item.id === topic.id);
+      if (stored) { stored.position = { x: topic.x, y: topic.y }; changed(); }
+    } });
   const msg = (value) => { $('#teacher-editor-status').textContent = value; };
   const formValue = (form, name) => form.elements[name].value.trim();
-  function changed() { dirty = true; $('#teacher-reviewed').checked = false; controls(); msg('Unsaved changes. Save before publishing.'); }
+  function changed() {
+    editSequence += 1; dirty = true; $('#teacher-reviewed').checked = false;
+    $('#teacher-frame').hidden = true;
+    sessionStorage.removeItem('skillloop.knowledge.preview');
+    controls(); msg('Unsaved changes. Save before publishing.');
+  }
+  function staged(form) {
+    pendingForms.add(form);
+    const cancel = $(`#${form.id}-cancel`);
+    if (cancel) cancel.hidden = false;
+    $('#teacher-reviewed').checked = false;
+    $('#teacher-frame').hidden = true;
+    sessionStorage.removeItem('skillloop.knowledge.preview');
+    controls(); msg('Form changes are not applied yet. Save the form or Cancel.');
+  }
+  function formDiscarded(form) {
+    pendingForms.delete(form);
+    controls(); msg(dirty ? 'Unsaved draft changes. Save before publishing.' : 'Form changes discarded; draft is unchanged.');
+  }
   function controls() {
-    $('#teacher-login').hidden = signedIn;
+    $('#teacher-login').hidden = signedIn || !backendAvailable;
     $('#teacher-logout').hidden = !signedIn;
     $('#teacher-workspace').hidden = !signedIn;
-    $('#teacher-save').disabled = !draft;
-    $('#teacher-publish').disabled = !draft || !revision || dirty || !$('#teacher-reviewed').checked;
+    $('#teacher-save').disabled = !draft || saving || publishing;
+    $('#teacher-reviewed').disabled = !draft || !revision || dirty || saving || publishing || !!pendingForms.size;
+    $('#teacher-publish').disabled = !draft || !revision || dirty || saving || publishing || !!pendingForms.size || !$('#teacher-reviewed').checked;
   }
   function optionList(selector) {
     const select = $(selector);
@@ -31,6 +56,7 @@
     canvas.set(draft.topics.filter((topic) => !topic.archived), draft.relations);
     const list = $('#teacher-topic-list');
     const query = $('#teacher-search').value.trim().toLowerCase();
+    canvas.highlight(query);
     list.replaceChildren();
     for (const topic of draft.topics) {
       if (query && !`${topic.title} ${topic.description}`.toLowerCase().includes(query)) continue;
@@ -40,7 +66,7 @@
       list.append(button);
     }
     for (const selector of ['#teacher-relation [name=source]', '#teacher-relation [name=target]',
-      '#teacher-question [name=topicId]', '#teacher-case [name=topicId]']) optionList(selector);
+      '#teacher-question [name=topicId]']) optionList(selector);
     renderRelations(); renderQuestions(); renderCases();
   }
   function selectTopic(id) {
@@ -50,17 +76,34 @@
     if (!topic) return;
     for (const name of ['id', 'title', 'description']) form.elements[name].value = topic[name];
     for (const name of ['goal', 'explanation', 'example', 'nextAction']) form.elements[name].value = topic.lesson[name];
+    $('#teacher-topic-preserved').textContent = `Preserved path fields · role: ${topic.pathRole}; order: ${topic.order}; icon: ${topic.icon}. These fields are kept unchanged when other fields are saved.`;
     form.elements.archived.checked = !!topic.archived;
+  }
+  function selectRelation(relation) {
+    const form = $('#teacher-relation');
+    if (pendingForms.has(form) && !window.confirm('Discard the open relationship form?')) return;
+    if (pendingForms.has(form)) formDiscarded(form);
+    form.dataset.editId = relation.id;
+    form.elements.source.value = relation.source; form.elements.target.value = relation.target;
+    form.elements.type.value = relation.type; form.elements.reason.value = relation.reason;
+    form.querySelector('button[type=submit]').textContent = 'Save relationship';
+    $('#teacher-relation-cancel').hidden = false;
+    form.scrollIntoView({ block: 'center' });
   }
   function renderRelations() {
     const box = $('#teacher-relations'); box.replaceChildren();
     for (const relation of draft.relations) {
       const row = K.make('p', '', `${relation.source} → ${relation.target} (${relation.type}): ${relation.reason} `);
+      const edit = K.make('button', 'sl-text-button', 'Edit'); edit.type = 'button';
+      edit.addEventListener('click', () => { canvas.selectEdge(relation.id); });
       const button = K.make('button', 'sl-text-button', 'Remove'); button.type = 'button';
-      button.addEventListener('click', () => { draft.relations = draft.relations.filter((item) => item.id !== relation.id);
+      button.addEventListener('click', () => {
+        const attached = (draft.activities || []).filter((item) => item.relationId === relation.id);
+        if (attached.length && !window.confirm(`Removing this relationship also removes ${attached.length} linked learning activities. Continue?`)) return;
+        draft.relations = draft.relations.filter((item) => item.id !== relation.id);
         draft.activities = (draft.activities || []).filter((item) => item.relationId !== relation.id);
         changed(); renderGraph(); });
-      row.append(button); box.append(row);
+      row.append(edit, button); box.append(row);
     }
   }
   function renderQuestions() {
@@ -69,11 +112,16 @@
       const row = K.make('p', '', `${question.archived ? '[Archived] ' : ''}${question.topicId}: ${question.prompt} `);
       const edit = K.make('button', 'sl-text-button', 'Edit'); edit.type = 'button';
       edit.addEventListener('click', () => {
-        const form = $('#teacher-question'); form.dataset.editId = question.id;
+        const form = $('#teacher-question');
+        if (pendingForms.has(form) && !window.confirm('Discard the open question form?')) return;
+        if (pendingForms.has(form)) formDiscarded(form);
+        form.dataset.editId = question.id;
         form.elements.topicId.value = question.topicId; form.elements.prompt.value = question.prompt;
         form.elements.options.value = question.options.join('\n'); form.elements.answer.value = question.answerIndex + 1;
         form.elements.feedback.value = question.feedback;
-        form.querySelector('button[type=submit]').textContent = 'Save question'; form.scrollIntoView({ block: 'center' });
+        form.querySelector('button[type=submit]').textContent = 'Save question';
+        $('#teacher-question-cancel').hidden = false;
+        form.scrollIntoView({ block: 'center' });
       });
       const archive = K.make('button', 'sl-text-button', question.archived ? 'Restore' : 'Archive'); archive.type = 'button';
       archive.addEventListener('click', () => { question.archived = !question.archived; changed(); renderQuestions(); });
@@ -86,14 +134,15 @@
       const row = K.make('p', '', `${item.archived ? '[Archived] ' : ''}${item.title} · ${item.date} `);
       const edit = K.make('button', 'sl-text-button', 'Edit'); edit.type = 'button';
       edit.addEventListener('click', () => {
-        const form = $('#teacher-case'); form.dataset.editId = item.id;
-        form.elements.topicId.value = item.links[0]?.topicId || '';
+        const form = $('#teacher-case');
+        if (pendingForms.has(form) && !window.confirm('Discard the open case form?')) return;
+        if (pendingForms.has(form)) formDiscarded(form);
+        form.dataset.editId = item.id;
         form.elements.title.value = item.title; form.elements.date.value = item.date;
         form.elements.summary.value = item.summary; form.elements.sourceTitle.value = item.source.title;
         form.elements.sourceUrl.value = item.source.url; form.elements.sourceDate.value = item.source.publishedDate;
-        form.elements.fact.value = item.claims.find((claim) => claim.kind === 'source-supported')?.text || '';
-        form.elements.sourceSection.value = item.claims.find((claim) => claim.kind === 'source-supported')?.sourceSection || '';
-        form.elements.inference.value = item.claims.find((claim) => claim.kind === 'teaching-inference')?.text || '';
+        fillCaseArrays(item.claims, item.links);
+        $('#teacher-case-cancel').hidden = false;
         form.querySelector('button[type=submit]').textContent = 'Save case'; form.scrollIntoView({ block: 'center' });
       });
       const archive = K.make('button', 'sl-text-button', item.archived ? 'Restore' : 'Archive'); archive.type = 'button';
@@ -101,6 +150,63 @@
       row.append(edit, archive); box.append(row);
     }
   }
+  function caseFormChanged() { staged($('#teacher-case')); }
+  function caseOption(select, value, label) {
+    const option = K.make('option', '', label); option.value = value; select.append(option);
+  }
+  function addClaimRow(claim = { kind: 'source-supported', text: '', sourceSection: '' }) {
+    const host = $('#teacher-case-claims');
+    if (host.children.length >= 10) { msg('A case can have at most 10 claims.'); return; }
+    const row = K.make('div', 'kn-case-row'); row.original = structuredClone(claim);
+    const kind = K.make('select'); kind.name = 'kind';
+    caseOption(kind, 'source-supported', 'Source-supported fact');
+    caseOption(kind, 'teaching-inference', 'Teaching interpretation'); kind.value = claim.kind;
+    const kindLabel = K.make('label', '', 'Claim type'); kindLabel.append(kind);
+    const content = K.make('textarea'); content.name = 'text'; content.required = true; content.minLength = 8;
+    content.maxLength = 500; content.value = claim.text || '';
+    const contentLabel = K.make('label', '', 'Claim'); contentLabel.append(content);
+    const section = K.make('input'); section.name = 'sourceSection'; section.maxLength = 100;
+    section.value = claim.sourceSection || '';
+    const sectionLabel = K.make('label', '', 'Source section'); sectionLabel.append(section);
+    const sync = () => { sectionLabel.hidden = kind.value !== 'source-supported'; section.required = kind.value === 'source-supported'; };
+    kind.addEventListener('change', sync); sync();
+    const remove = K.make('button', 'sl-text-button', 'Remove claim'); remove.type = 'button';
+    remove.addEventListener('click', () => { if (host.children.length <= 1) { msg('A case needs at least one claim.'); return; } row.remove(); caseFormChanged(); });
+    row.append(kindLabel, contentLabel, sectionLabel, remove); host.append(row);
+  }
+  function addLinkRow(link = { topicId: draft?.topics[0]?.id || '', kind: 'application', reason: '' }) {
+    const host = $('#teacher-case-links');
+    if (host.children.length >= 10) { msg('A case can have at most 10 concept links.'); return; }
+    const row = K.make('div', 'kn-case-row'); row.original = structuredClone(link);
+    const topic = K.make('select'); topic.name = 'topicId';
+    for (const item of draft.topics) caseOption(topic, item.id, item.title);
+    topic.value = link.topicId;
+    const topicLabel = K.make('label', '', 'Concept'); topicLabel.append(topic);
+    const kind = K.make('select'); kind.name = 'kind';
+    for (const name of ['application', 'context', 'introduced']) caseOption(kind, name, name);
+    kind.value = link.kind;
+    const kindLabel = K.make('label', '', 'Connection kind'); kindLabel.append(kind);
+    const reason = K.make('input'); reason.name = 'reason'; reason.required = true;
+    reason.minLength = 12; reason.maxLength = 280; reason.value = link.reason || '';
+    const reasonLabel = K.make('label', '', 'Connection reason'); reasonLabel.append(reason);
+    const remove = K.make('button', 'sl-text-button', 'Remove concept link'); remove.type = 'button';
+    remove.addEventListener('click', () => { if (host.children.length <= 1) { msg('A case needs at least one concept link.'); return; } row.remove(); caseFormChanged(); });
+    row.append(topicLabel, kindLabel, reasonLabel, remove); host.append(row);
+  }
+  function fillCaseArrays(claims, links) {
+    $('#teacher-case-claims').replaceChildren(); $('#teacher-case-links').replaceChildren();
+    for (const claim of claims) addClaimRow(claim);
+    for (const link of links) addLinkRow(link);
+  }
+  $('#teacher-add-claim').addEventListener('click', () => { addClaimRow(); caseFormChanged(); });
+  $('#teacher-add-link').addEventListener('click', () => { addLinkRow(); caseFormChanged(); });
+  $('#teacher-case-cancel').addEventListener('click', () => {
+    const form = $('#teacher-case'); formDiscarded(form); form.reset(); delete form.dataset.editId;
+    fillCaseArrays([{ kind: 'source-supported', text: '', sourceSection: '' },
+      { kind: 'teaching-inference', text: '' }], [{ topicId: draft.topics[0]?.id || '', kind: 'application', reason: '' }]);
+    form.querySelector('button[type=submit]').textContent = 'Add case';
+    $('#teacher-case-cancel').hidden = true;
+  });
   async function graphs() {
     graphList = (await K.api('my-graphs')).graphs || [];
     const select = $('#teacher-graphs'); select.replaceChildren();
@@ -116,23 +222,32 @@
   }
   async function loadDraft() {
     if (!graphId) return;
-    const response = await K.api('draft', 'GET', undefined, { graph: graphId });
+    const requestedGraph = graphId, requestedLoad = ++loadSequence;
+    const response = await K.api('draft', 'GET', undefined, { graph: requestedGraph });
+    if (requestedGraph !== graphId || requestedLoad !== loadSequence) return;
     revision = response.draft?.revision || null;
     if (response.draft?.payload) draft = response.draft.payload;
     else if (graphId === K.sampleId) draft = structuredClone(window.SkillLoopGraph);
     else throw new Error('This graph has no editable draft.');
     draft.questions ||= []; draft.events ||= []; draft.activities ||= [];
-    for (const selector of ['#teacher-question', '#teacher-case']) {
+    for (const selector of ['#teacher-relation', '#teacher-question', '#teacher-case']) {
       const form = $(selector); form.reset(); delete form.dataset.editId;
-      form.querySelector('button[type=submit]').textContent = selector === '#teacher-question' ? 'Add question' : 'Add case';
+      form.querySelector('button[type=submit]').textContent = selector === '#teacher-relation' ? 'Add relationship' : selector === '#teacher-question' ? 'Add question' : 'Add case';
     }
+    $('#teacher-relation-cancel').hidden = true;
+    $('#teacher-question-cancel').hidden = true;
     selectedId = draft.topics[0]?.id || null;
-    dirty = false; $('#teacher-reviewed').checked = false;
+    dirty = false; pendingForms.clear(); editSequence += 1; $('#teacher-reviewed').checked = false;
+    $('#teacher-frame').hidden = true;
+    sessionStorage.removeItem('skillloop.knowledge.preview');
     const form = $('#teacher-meta');
     form.elements.title.value = draft.publication.title;
     form.elements.version.value = draft.publication.version;
     form.elements.date.value = draft.publication.publishedAt;
     renderGraph(); selectTopic(selectedId); controls();
+    fillCaseArrays([{ kind: 'source-supported', text: '', sourceSection: '' },
+      { kind: 'teaching-inference', text: '' }], [{ topicId: draft.topics[0]?.id || '', kind: 'application', reason: '' }]);
+    $('#teacher-case-cancel').hidden = true;
     const share = new URL(K.href('graph', { graph: graphId }), location.origin);
     $('#teacher-share').replaceChildren(document.createTextNode('Published share link: '));
     const anchor = K.make('a', '', share.href); anchor.href = share.href; $('#teacher-share').append(anchor);
@@ -154,6 +269,7 @@
     finally { button.disabled = false; }
   });
   $('#teacher-logout').addEventListener('click', async () => {
+    if (!await protectDraft()) return;
     try { await K.api('logout', 'POST', {}); } catch { /* Close editor locally. */ }
     signedIn = false; graphId = null; draft = null; revision = null;
     sessionStorage.removeItem('skillloop.knowledge.preview');
@@ -161,6 +277,7 @@
   });
   $('#teacher-create').addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (!await protectDraft()) return;
     const form = event.currentTarget;
     try {
       const result = await K.api('create-graph', 'POST', { title: formValue(form, 'title') });
@@ -168,6 +285,7 @@
     } catch (error) { msg(error.message); }
   });
   $('#teacher-create-sample').addEventListener('click', async () => {
+    if (!await protectDraft()) return;
     try {
       const result = await K.api('create-graph', 'POST', { title: 'Software development sample' });
       const payload = structuredClone(window.SkillLoopGraph);
@@ -179,8 +297,11 @@
     } catch (error) { msg(error.message); }
   });
   $('#teacher-graphs').addEventListener('change', async (event) => {
-    graphId = event.target.value;
-    try { await loadDraft(); } catch (error) { msg(error.message); }
+    const oldGraph = graphId, nextGraph = event.target.value;
+    event.target.value = oldGraph || '';
+    if (!await protectDraft()) return;
+    graphId = nextGraph;
+    try { await loadDraft(); } catch (error) { graphId = oldGraph; event.target.value = oldGraph || ''; msg(error.message); }
   });
   $('#teacher-search').addEventListener('input', renderGraph);
   $('#teacher-zoom-in').addEventListener('click', () => canvas.zoom(1.2));
@@ -220,9 +341,26 @@
     const form = event.currentTarget;
     const source = formValue(form, 'source'), target = formValue(form, 'target');
     if (source === target) { msg('Choose different concepts.'); return; }
-    draft.relations.push({ id: `relation-${crypto.randomUUID()}`, source, target,
-      type: formValue(form, 'type'), reason: formValue(form, 'reason') });
-    changed(); renderGraph(); form.reset();
+    const existing = draft.relations.find((item) => item.id === form.dataset.editId);
+    if (existing && (existing.source !== source || existing.target !== target)) {
+      const attached = (draft.activities || []).filter((item) => item.relationId === existing.id);
+      if (attached.length && !window.confirm(`This relationship has ${attached.length} learning activities. Review their topic links after changing its endpoints. Continue?`)) return;
+    }
+    if (draft.relations.some((item) => item !== existing && item.source === source && item.target === target)) {
+      msg('This directed relationship already exists.'); return;
+    }
+    const next = { ...existing, id: existing?.id || `relation-${crypto.randomUUID()}`, source, target,
+      type: formValue(form, 'type'), reason: formValue(form, 'reason') };
+    if (existing) Object.assign(existing, next); else draft.relations.push(next);
+    pendingForms.delete(form); changed(); renderGraph(); form.reset(); delete form.dataset.editId;
+    form.querySelector('button[type=submit]').textContent = 'Add relationship';
+    $('#teacher-relation-cancel').hidden = true;
+  });
+  $('#teacher-relation-cancel').addEventListener('click', () => {
+    const form = $('#teacher-relation');
+    formDiscarded(form); form.reset(); delete form.dataset.editId;
+    form.querySelector('button[type=submit]').textContent = 'Add relationship';
+    $('#teacher-relation-cancel').hidden = true;
   });
   $('#teacher-question').addEventListener('submit', (event) => {
     event.preventDefault(); if (!draft) return;
@@ -233,39 +371,84 @@
       msg('Use 2–4 options and a matching answer number.'); return;
     }
     const existing = draft.questions.find((item) => item.id === form.dataset.editId);
-    const next = { id: existing?.id || `question-${crypto.randomUUID()}`,
+    const next = { ...existing, id: existing?.id || `question-${crypto.randomUUID()}`,
       topicId: formValue(form, 'topicId'), prompt: formValue(form, 'prompt'), options, answerIndex,
-      feedback: formValue(form, 'feedback'), ...(existing?.archived ? { archived: true } : {}) };
+      feedback: formValue(form, 'feedback') };
     if (existing) Object.assign(existing, next); else draft.questions.push(next);
-    changed(); renderQuestions(); form.reset(); delete form.dataset.editId;
+    pendingForms.delete(form); changed(); renderQuestions(); form.reset(); delete form.dataset.editId;
     form.querySelector('button[type=submit]').textContent = 'Add question';
+    $('#teacher-question-cancel').hidden = true;
+  });
+  $('#teacher-question-cancel').addEventListener('click', () => {
+    const form = $('#teacher-question');
+    formDiscarded(form); form.reset(); delete form.dataset.editId;
+    form.querySelector('button[type=submit]').textContent = 'Add question';
+    $('#teacher-question-cancel').hidden = true;
   });
   $('#teacher-case').addEventListener('submit', (event) => {
     event.preventDefault(); if (!draft) return;
-    const form = event.currentTarget, topicId = formValue(form, 'topicId');
+    const form = event.currentTarget;
     const today = new Date().toISOString().slice(0, 10);
     const existing = draft.events.find((item) => item.id === form.dataset.editId);
-    const next = { id: existing?.id || `case-${crypto.randomUUID()}`, title: formValue(form, 'title'),
-      date: form.elements.date.value, summary: formValue(form, 'summary'),
-      source: { title: formValue(form, 'sourceTitle'), url: formValue(form, 'sourceUrl'),
-        publishedDate: form.elements.sourceDate.value, checkedDate: today },
-      claims: [ { kind: 'source-supported', text: formValue(form, 'fact'), sourceSection: formValue(form, 'sourceSection') },
-        { kind: 'teaching-inference', text: formValue(form, 'inference') } ],
-      links: [{ topicId, kind: 'application', reason: `This case illustrates ${draft.topics.find((topic) => topic.id === topicId)?.title || topicId} in practice.` },
-        ...(existing?.links || []).slice(1)], ...(existing?.archived ? { archived: true } : {}) };
+    const claims = [...$('#teacher-case-claims').children].map((row) => ({ ...row.original,
+      kind: row.querySelector('[name=kind]').value, text: row.querySelector('[name=text]').value.trim(),
+      ...(row.querySelector('[name=kind]').value === 'source-supported'
+        ? { sourceSection: row.querySelector('[name=sourceSection]').value.trim() } : {}) }));
+    const links = [...$('#teacher-case-links').children].map((row) => ({ ...row.original,
+      topicId: row.querySelector('[name=topicId]').value, kind: row.querySelector('[name=kind]').value,
+      reason: row.querySelector('[name=reason]').value.trim() }));
+    const next = window.SkillLoopCaseEditor.updateCase(existing, {
+      claims, links, title: formValue(form, 'title'), date: form.elements.date.value,
+      summary: formValue(form, 'summary'), sourceTitle: formValue(form, 'sourceTitle'),
+      sourceUrl: formValue(form, 'sourceUrl'), sourceDate: form.elements.sourceDate.value,
+    }, draft.topics, `case-${crypto.randomUUID()}`, today);
     if (existing) Object.assign(existing, next); else draft.events.push(next);
-    changed(); renderCases(); form.reset(); delete form.dataset.editId;
+    pendingForms.delete(form); changed(); renderCases(); form.reset(); delete form.dataset.editId;
+    fillCaseArrays([{ kind: 'source-supported', text: '', sourceSection: '' },
+      { kind: 'teaching-inference', text: '' }], [{ topicId: draft.topics[0]?.id || '', kind: 'application', reason: '' }]);
     form.querySelector('button[type=submit]').textContent = 'Add case';
+    $('#teacher-case-cancel').hidden = true;
   });
-  $('#teacher-save').addEventListener('click', async () => {
+  for (const selector of ['#teacher-relation', '#teacher-question', '#teacher-case']) {
+    const form = $(selector);
+    form.addEventListener('input', () => staged(form));
+  }
+  async function saveDraft() {
+    if (!draft || saving || publishing) return false;
+    for (const form of [...pendingForms]) form.requestSubmit();
+    if (pendingForms.size) { msg('Complete or cancel the open relationship, question or case form before saving.'); return false; }
+    const payload = structuredClone(draft);
+    saving = true; controls();
+    const savingGraph = graphId, savingSequence = editSequence;
     try {
-      const result = await K.api('draft', 'POST', { graphId, payload: draft, expectedRevision: revision });
-      revision = result.revision; dirty = false; $('#teacher-reviewed').checked = false;
-      controls(); msg(`Saved private draft ${revision}. Review every page before publishing.`);
-    } catch (error) { msg(error.message); }
+      const result = await K.api('draft', 'POST', { graphId: savingGraph, payload, expectedRevision: revision });
+      if (savingGraph !== graphId) return false;
+      revision = result.revision;
+      dirty = editSequence !== savingSequence;
+      $('#teacher-reviewed').checked = false;
+      msg(dirty ? 'Saved an earlier revision. New changes are still unsaved.' : pendingForms.size
+        ? `Saved private draft ${revision}; open form changes remain unapplied.`
+        : `Saved private draft ${revision}. Review every page before publishing.`);
+      return !dirty && !pendingForms.size;
+    } catch (error) { msg(`Save failed: ${error.message}`); return false; }
+    finally { saving = false; controls(); }
+  }
+  async function protectDraft() {
+    if (saving || publishing) { msg('Wait for the current request to finish.'); return false; }
+    if (!dirty && !pendingForms.size) return true;
+    const choice = window.prompt('Unsaved teacher draft. Type SAVE, DISCARD, or CANCEL.', 'CANCEL')?.trim().toUpperCase();
+    if (choice === 'SAVE') return saveDraft();
+    if (choice === 'DISCARD') return true;
+    return false;
+  }
+  window.addEventListener('beforeunload', (event) => {
+    if (!dirty && !pendingForms.size && !saving) return;
+    event.preventDefault(); event.returnValue = '';
   });
+  $('#teacher-save').addEventListener('click', saveDraft);
   function preview(page) {
     if (!draft) return;
+    if (pendingForms.size) { msg('Apply or cancel the open form changes before previewing.'); return; }
     const query = { graph: graphId, draftPreview: '1' };
     if (page === 'concept') query.topic = selectedId || draft.topics[0]?.id;
     if (page === 'question') query.question = (draft.questions || []).find((item) => item.topicId === selectedId)?.id || draft.questions?.[0]?.id;
@@ -286,12 +469,22 @@
     $(`#${id}`).addEventListener('click', () => preview(page));
   $('#teacher-reviewed').addEventListener('change', controls);
   $('#teacher-publish').addEventListener('click', async () => {
-    if (!revision || dirty || !$('#teacher-reviewed').checked) return;
+    if (!revision || dirty || saving || publishing || !$('#teacher-reviewed').checked) return;
+    publishing = true; controls();
     try {
       const result = await K.api('publish', 'POST', { graphId, revision, reviewed: true });
-      $('#teacher-reviewed').checked = false; controls(); await graphs();
-      msg(`Published ${result.version}. The share link now serves this version.`);
-    } catch (error) { msg(error.message); }
+      $('#teacher-reviewed').checked = false;
+      const graph = graphList.find((item) => item.id === graphId);
+      if (graph) {
+        graph.current_version = result.version;
+        const option = [...$('#teacher-graphs').options].find((item) => item.value === graphId);
+        if (option) option.textContent = `${graph.title} · ${result.version}`;
+      }
+      msg(dirty || pendingForms.size
+        ? `Published ${result.version}. New edits remain in this workspace and are not published; save them as a new draft.`
+        : `Published ${result.version}. The share link now serves this version.`);
+    } catch (error) { msg(`Publish failed: ${error.message}`); }
+    finally { publishing = false; controls(); }
   });
   $('#teacher-discovery').addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -310,10 +503,12 @@
   controls();
   try {
     const session = await K.api('session');
+    backendAvailable = !!session.backendConfigured;
+    controls();
     if (session.signedIn && session.role === 'teacher') {
       signedIn = true; controls(); await graphs(); $('#teacher-status').textContent = `Signed in as ${session.email}.`;
     } else if (session.signedIn) $('#teacher-status').textContent = 'Teacher role required.';
     else if (!session.backendConfigured) $('#teacher-status').textContent = 'Teacher editing needs the Supabase URL and publishable key configured in this deployment, plus a teacher account. You can explore the sample public graph without signing in.';
     else $('#teacher-status').textContent = 'Sign in with a teacher account to edit and publish graphs.';
-  } catch { $('#teacher-status').textContent = 'Teacher sign-in is unavailable. Check the knowledge backend deployment settings.'; }
+  } catch { backendAvailable = false; controls(); $('#teacher-status').textContent = 'Teacher sign-in is unavailable. Check the knowledge backend deployment settings.'; }
 })();

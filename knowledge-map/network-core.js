@@ -26,7 +26,11 @@
     let data;
     try { data = await response.json(); }
     catch { throw new Error('Knowledge backend is unavailable.'); }
-    if (!response.ok) throw new Error(data.error || `Request failed (${response.status}).`);
+    if (!response.ok) {
+      const error = new Error(data.error || `Request failed (${response.status}).`);
+      error.status = response.status;
+      throw error;
+    }
     return data;
   }
   async function loadGraph() {
@@ -53,7 +57,8 @@
   const legacy = () => window.SkillLoop.read('knowledge', { selected: null, completed: [], references: [] });
   function local() {
     const old = legacy();
-    const migrated = (old.references || []).filter((ref) => safeId(ref.id)).map((ref, index) => ({
+    const references = Array.isArray(old.references) ? old.references : [];
+    const migrated = references.filter((ref) => ref && safeId(ref.id)).map((ref, index) => ({
       id: `${sampleId}:${ref.id}`, kind: 'reference', graphId: sampleId, conceptId: ref.id,
       sourceVersion: ref.version || 'unknown', titleSnapshot: ref.title || ref.id,
       descriptionSnapshot: ref.description || '', note: ref.note || '',
@@ -64,7 +69,7 @@
     data.edges = Array.isArray(data.edges) ? data.edges : [];
     return data;
   }
-  function saveLocal(data) { window.SkillLoop.write('knowledgeV2', data); }
+  function saveLocal(data) { return window.SkillLoop.write('knowledgeV2', data); }
   function referenceNode(graph, topic, data) {
     const id = `${graph.publication.id}:${topic.id}`;
     if (data.nodes.some((node) => node.id === id)) return false;
@@ -92,14 +97,18 @@
       this.items = [];
       this.edges = [];
       this.buttons = new Map();
+      this.edgeLines = new Map();
+      this.selection = null;
+      this.search = '';
       host.classList.add('kn-canvas');
-      host.innerHTML = '<div class="kn-stage"><svg class="kn-lines" aria-hidden="true"></svg><div class="kn-nodes"></div></div>';
+      host.innerHTML = '<div class="kn-stage"><svg class="kn-lines" aria-hidden="true"></svg><div class="kn-edge-targets"></div><div class="kn-nodes"></div></div>';
       this.stage = host.querySelector('.kn-stage');
       this.svg = host.querySelector('.kn-lines');
+      this.edgeLayer = host.querySelector('.kn-edge-targets');
       this.nodeLayer = host.querySelector('.kn-nodes');
       host.addEventListener('wheel', (event) => { event.preventDefault(); this.zoom(event.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });
       host.addEventListener('pointerdown', (event) => {
-        if (event.target.closest('.kn-node')) return;
+        if (event.target.closest('.kn-node, .kn-edge-target')) return;
         this.drag = { kind: 'pan', x: event.clientX, y: event.clientY, tx: this.tx, ty: this.ty };
         host.setPointerCapture(event.pointerId);
       });
@@ -117,13 +126,26 @@
           this.lines();
         }
       });
-      const finish = () => { if (this.drag?.kind === 'node') this.options.onMove?.(this.drag.item); this.drag = null; };
+      const finish = () => {
+        if (this.drag?.kind === 'node') this.options.onMove?.(this.drag.item, { x: this.drag.x0, y: this.drag.y0 });
+        this.drag = null;
+      };
       host.addEventListener('pointerup', finish);
       host.addEventListener('pointercancel', finish);
     }
     zoom(factor) {
       this.scale = Math.max(0.35, Math.min(2.4, this.scale * factor));
       this.transform();
+    }
+    resetView() { this.scale = 1; this.tx = 0; this.ty = 0; this.transform(); }
+    highlight(query) {
+      this.search = query.trim().toLowerCase();
+      this.buttons.forEach((button, id) => {
+        const item = this.items.find((entry) => entry.id === id);
+        const matches = !this.search || `${item.title || item.titleSnapshot || ''} ${item.description || item.body || item.note || ''}`.toLowerCase().includes(this.search);
+        button.classList.toggle('kn-search-muted', !matches);
+        button.classList.toggle('kn-search-match', !!this.search && matches);
+      });
     }
     transform() { this.stage.style.transform = `translate(${this.tx}px, ${this.ty}px) scale(${this.scale})`; }
     focus(id) {
@@ -137,13 +159,24 @@
       this.select(id);
     }
     select(id) {
+      this.selection = { kind: 'node', id };
       this.buttons.forEach((button, key) => button.setAttribute('aria-pressed', String(key === id)));
+      this.edgeLines.forEach((line) => line.classList.remove('kn-edge-selected'));
       this.options.onSelect?.(id);
     }
+    selectEdge(id) {
+      const edge = this.edges.find((item) => item.id === id);
+      if (!edge) return;
+      this.selection = { kind: 'relationship', id };
+      this.buttons.forEach((button) => button.setAttribute('aria-pressed', 'false'));
+      this.edgeLines.forEach((line, key) => line.classList.toggle('kn-edge-selected', key === id));
+      this.options.onSelectEdge?.(edge);
+    }
     set(items, edges) {
-      this.items = items.map((item, index) => Object.assign(item, position(item, index)));
+      this.items = items.map((item, index) => ({ ...item, ...position(item, index) }));
       this.edges = edges;
       this.buttons.clear();
+      this.edgeLines.clear();
       this.nodeLayer.replaceChildren();
       const fragment = document.createDocumentFragment();
       for (const item of this.items) {
@@ -165,6 +198,10 @@
       this.nodeLayer.append(fragment);
       this.lines();
       this.transform();
+      this.highlight(this.search);
+      if (this.selection?.kind === 'relationship' && !this.edges.some((edge) => edge.id === this.selection.id)) this.selection = null;
+      if (this.selection?.kind === 'node' && !this.buttons.has(this.selection.id)) this.selection = null;
+      this.buttons.forEach((button, key) => button.setAttribute('aria-pressed', String(this.selection?.kind === 'node' && key === this.selection.id)));
     }
     place(item) {
       const button = this.buttons.get(item.id);
@@ -172,17 +209,33 @@
     }
     lines() {
       const positions = new Map(this.items.map((item) => [item.id, item]));
+      this.svg.setAttribute('width', String(Math.max(1, ...this.items.map((item) => item.x + 220))));
+      this.svg.setAttribute('height', String(Math.max(1, ...this.items.map((item) => item.y + 100))));
       const fragment = document.createDocumentFragment();
+      const targets = document.createDocumentFragment();
       for (const edge of this.edges) {
         const from = positions.get(edge.source), to = positions.get(edge.target);
         if (!from || !to) continue;
+        const x1 = from.x + 90, y1 = from.y + 26, x2 = to.x + 90, y2 = to.y + 26;
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', from.x + 90); line.setAttribute('y1', from.y + 26);
-        line.setAttribute('x2', to.x + 90); line.setAttribute('y2', to.y + 26);
+        line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2); line.setAttribute('y2', y2);
         line.setAttribute('class', edge.kind === 'personal' ? 'kn-personal-line' : 'kn-teacher-line');
+        const target = make('button', 'kn-edge-target');
+        target.type = 'button';
+        target.setAttribute('aria-label', `Relationship: ${from.title || from.titleSnapshot || from.id} to ${to.title || to.titleSnapshot || to.id}`);
+        target.style.left = `${x1}px`;
+        target.style.top = `${y1 - 9}px`;
+        target.style.width = `${Math.hypot(x2 - x1, y2 - y1)}px`;
+        target.style.transform = `rotate(${Math.atan2(y2 - y1, x2 - x1)}rad)`;
+        target.addEventListener('click', (event) => { event.stopPropagation(); this.selectEdge(edge.id); });
+        if (this.selection?.kind === 'relationship' && this.selection.id === edge.id) line.classList.add('kn-edge-selected');
         fragment.append(line);
+        targets.append(target);
+        this.edgeLines.set(edge.id, line);
       }
       this.svg.replaceChildren(fragment);
+      this.edgeLayer.replaceChildren(targets);
     }
   }
   window.KnowledgeNetwork = { $, make, api, href, graphId, sampleId, safeId, loadGraph, local, saveLocal,

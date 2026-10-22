@@ -78,6 +78,84 @@ test('public endpoint serves only the current publication', async () => {
   });
 });
 
+test('anonymous directory requests only published graphs and returns public metadata', async () => {
+  const requests = [];
+  await withBackend(async (url, options) => {
+    const parsed = new URL(url);
+    requests.push({ parsed, options });
+    if (parsed.pathname.endsWith('/skillloop_graphs') && parsed.searchParams.has('order'))
+      return reply([{ id: 'software-development', title: 'Software development', current_version: '2026-10-21.1' }]);
+    if (parsed.pathname.endsWith('/skillloop_graphs')) return reply([{ current_version: '2026-10-21.1' }]);
+    if (parsed.pathname.endsWith('/skillloop_publications')) return reply([{ payload: sample }]);
+    throw new Error(`Unexpected ${url}`);
+  }, async () => {
+    const response = await handler.fetch(request('public-graphs'));
+    assert.equal(response.status, 200);
+    const { graphs, unavailableCount } = await response.json();
+    assert.equal(graphs.length, 1);
+    assert.equal(unavailableCount, 0);
+    assert.deepEqual(Object.keys(graphs[0]).sort(), ['conceptCount', 'description', 'id', 'title', 'version']);
+    assert.equal(graphs[0].conceptCount, 7);
+    assert.equal(requests[0].parsed.searchParams.get('current_version'), 'not.is.null');
+    assert.equal(requests.every(({ options }) => !options.headers.Authorization), true);
+    assert.equal(requests.some(({ parsed }) => parsed.pathname.endsWith('/skillloop_drafts')), false);
+  });
+});
+
+test('directory reports unavailable publications without claiming an empty catalog', async () => {
+  await withBackend(async (url) => {
+    const parsed = new URL(url);
+    if (parsed.pathname.endsWith('/skillloop_graphs') && parsed.searchParams.has('order'))
+      return reply([
+        { id: 'software-development', title: 'Software development', current_version: '2026-10-21.1' },
+        { id: 'missing-publication', title: 'Unavailable publication', current_version: '2026-10-21.1' },
+      ]);
+    if (parsed.pathname.endsWith('/skillloop_graphs')) return reply([{ current_version: '2026-10-21.1' }]);
+    if (parsed.pathname.endsWith('/skillloop_publications'))
+      return reply(parsed.searchParams.get('graph_id') === 'eq.missing-publication' ? [] : [{ payload: sample }]);
+    throw new Error(`Unexpected ${url}`);
+  }, async () => {
+    const response = await handler.fetch(request('public-graphs'));
+    assert.equal(response.status, 200);
+    const result = await response.json();
+    assert.deepEqual(result.graphs.map((graph) => graph.id), ['software-development']);
+    assert.equal(result.unavailableCount, 1);
+  });
+});
+
+test('directory pages expose all published resources without querying private drafts', async () => {
+  const queries = [];
+  await withBackend(async (url, options) => {
+    const parsed = new URL(url);
+    if (parsed.pathname.endsWith('/skillloop_graphs') && parsed.searchParams.has('order')) {
+      queries.push({ offset: parsed.searchParams.get('offset'), limit: parsed.searchParams.get('limit'),
+        order: parsed.searchParams.get('order'), authorized: Boolean(options.headers.Authorization) });
+      const offset = Number(parsed.searchParams.get('offset'));
+      return reply(Array.from({ length: Math.max(0, Math.min(25, 26 - offset)) }, (_, index) => ({
+        id: `graph-${offset + index}`, title: `Graph ${offset + index}`, current_version: '2026-10-21.1',
+      })));
+    }
+    if (parsed.pathname.endsWith('/skillloop_graphs')) return reply([{ current_version: '2026-10-21.1' }]);
+    if (parsed.pathname.endsWith('/skillloop_publications')) return reply([{ payload: sample }]);
+    throw new Error(`Unexpected ${url}`);
+  }, async () => {
+    const first = await handler.fetch(request('public-graphs'));
+    const firstPage = await first.json();
+    assert.equal(firstPage.graphs.length, 24);
+    assert.equal(firstPage.hasMore, true);
+    const second = await handler.fetch(new Request('https://skillloop.example/api/knowledge?op=public-graphs&page=1'));
+    const secondPage = await second.json();
+    assert.deepEqual(secondPage.graphs.map((graph) => graph.id), ['graph-24', 'graph-25']);
+    assert.equal(secondPage.hasMore, false);
+    assert.deepEqual(queries, [
+      { offset: '0', limit: '25', order: 'created_at.desc,id.asc', authorized: false },
+      { offset: '24', limit: '25', order: 'created_at.desc,id.asc', authorized: false },
+    ]);
+    const invalid = await handler.fetch(new Request('https://skillloop.example/api/knowledge?op=public-graphs&page=-1'));
+    assert.equal(invalid.status, 400);
+  });
+});
+
 test('login issues HttpOnly cookies and a student cannot read drafts', async () => {
   await withBackend(async (url) => {
     const path = new URL(url).pathname;
