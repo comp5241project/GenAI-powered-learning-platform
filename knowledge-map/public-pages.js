@@ -122,7 +122,10 @@
       for (const event of events.filter((item) => !item.archived && item.links.some((entry) => entry.topicId === topic.id)))
         pages.append(link(`Case: ${event.title}`, K.href('case', { case: event.id, topic: topic.id })));
       const practice = $('#kn-practice-link');
-      if (topic.practiceHref) { practice.href = topic.practiceHref; practice.hidden = false; }
+      if (topic.practiceHref) {
+        practice.href = new URL(topic.practiceHref, `${location.origin}/knowledge-map/`).href;
+        practice.hidden = false;
+      }
       const activities = (graph.activities || []).filter((activity) => activity.topicIds.includes(topic.id));
       $('#kn-activities-section').hidden = !activities.length;
       if (activities.length) renderActivities($('#kn-activities'), activities);
