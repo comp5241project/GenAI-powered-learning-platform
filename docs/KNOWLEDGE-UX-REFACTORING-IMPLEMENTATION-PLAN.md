@@ -155,7 +155,9 @@ Do not run automatic migration push against this project or a release target bas
 
 A real concurrent-write check submitted the identical QA graph draft payload twice at the same expected revision through the preview API. One save returned 200, the other 409. A fresh draft read showed the payload unchanged and a single advanced revision. This check used `scripts/preview_knowledge_acceptance.mjs --concurrent-only`; it did not publish a new version or change the published graph.
 
-**Release gates still open:** complete an actual screen-reader review. Exercise a new account import and teacher save through the deployed UI if a release gate requires end-to-end write proof; the same writes and data invariants already passed through the local loopback proxy and concurrent preview API checks. Review the migration history/version mismatch before automated promotion, and apply/verify the additive migration in each target environment only as part of a separately authorized release. No production action is implied by this record.
+The deployed Preview teacher UI also passed a save and reload check. The teacher changed the QA graph title, saved a private draft, restored the original title, saved again, and reloaded the page. The restored title loaded from the saved private draft at revision `c8beb1ed-0b38-43ab-a42d-5577c5d12f7f`. The published graph still appeared as version `2026-10-22.2`; no new version was published. A separate read-only management check with the locally configured scoped token reconfirmed the personal-edge policy and `UPDATE(reason)` grant, with whole-table UPDATE absent.
+
+**Release gates still open:** complete an actual screen-reader review. Exercise a new account import through the deployed UI if a release gate requires end-to-end write proof; the same write and data invariants already passed through the local loopback proxy. Review the migration history/version mismatch before automated promotion, and apply/verify the additive migration in each target environment only as part of a separately authorized release. No production action is implied by this record.
 
 ## AC01–AC12 acceptance audit
 
