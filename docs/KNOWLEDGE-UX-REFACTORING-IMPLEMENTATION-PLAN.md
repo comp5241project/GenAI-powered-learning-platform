@@ -161,6 +161,8 @@ The deployed Preview account UI passed a browser-to-account import check with a 
 
 The deployed Preview Learning Path page linked to `/knowledge-map/?topic=foundations`; following that existing link redirected to the sample graph's `Foundations` concept page with its practice entry intact. This checks the final clean-URL deployment path as well as the retained query-based deep link.
 
+The Vercel deployment for commit `a46cd0e` on `feature/knowledge-map` reported **Ready** in the **Preview** environment. Its account page at `https://skillloop-c0eynjn02-saiyanhope66-9171.vercel.app/knowledge-map/account/` showed a neutral `Prototype` header and explicit Local Mode status before sign-in; after the student QA account signed in, it showed the account-network separation message while the header remained neutral. The other learning modules retain their existing local-data header. No production deployment was initiated.
+
 **Release gates still open:** complete an actual screen-reader review. Windows Narrator is installed, but its elevated dialog could not be controlled from this task's desktop automation session, so no spoken output was observed; browser accessibility-tree and keyboard checks must not be reported as screen-reader evidence. A fresh-account onboarding import remains untested because this check used the existing student QA account. Review the migration history/version mismatch before automated promotion, and apply/verify the additive migration in each target environment only as part of a separately authorized release. No production action is implied by this record.
 
 ## AC01–AC12 acceptance audit
