@@ -41,6 +41,21 @@
     $('#teacher-reviewed').disabled = !draft || !revision || dirty || saving || publishing || transitioning || !!pendingForms.size;
     $('#teacher-publish').disabled = !draft || !revision || dirty || saving || publishing || transitioning || !!pendingForms.size || !$('#teacher-reviewed').checked;
   }
+  function renderShareLink() {
+    const share = $('#teacher-share');
+    if (!graphId) {
+      share.textContent = 'Create a graph to get a share link.';
+      return;
+    }
+    const graph = graphList.find((item) => item.id === graphId);
+    if (!graph?.current_version) {
+      share.textContent = 'Private draft. Publish a saved version to get a public share link.';
+      return;
+    }
+    const url = new URL(K.href('graph', { graph: graphId }), location.origin);
+    share.replaceChildren(document.createTextNode('Published share link: '));
+    const anchor = K.make('a', '', url.href); anchor.href = url.href; share.append(anchor);
+  }
   async function withWorkspaceTransition(message, action) {
     if (transitioning) return false;
     const previousStatus = $('#teacher-status').textContent;
@@ -223,7 +238,7 @@
       option.value = graph.id; select.append(option);
     }
     if (!graphList.length) { graphId = null; draft = null; revision = null;
-      msg('Create your first graph to begin.'); controls(); return; }
+      renderShareLink(); msg('Create your first graph to begin.'); controls(); return; }
     if (!graphList.some((item) => item.id === graphId)) graphId = graphList[0].id;
     select.value = graphId;
     await loadDraft();
@@ -256,9 +271,7 @@
     fillCaseArrays([{ kind: 'source-supported', text: '', sourceSection: '' },
       { kind: 'teaching-inference', text: '' }], [{ topicId: draft.topics[0]?.id || '', kind: 'application', reason: '' }]);
     $('#teacher-case-cancel').hidden = true;
-    const share = new URL(K.href('graph', { graph: graphId }), location.origin);
-    $('#teacher-share').replaceChildren(document.createTextNode('Published share link: '));
-    const anchor = K.make('a', '', share.href); anchor.href = share.href; $('#teacher-share').append(anchor);
+    renderShareLink();
     msg(revision ? `Loaded private draft ${revision}.` : 'Sample content loaded. Save a draft before publishing.');
   }
   $('#teacher-login').addEventListener('submit', async (event) => {
@@ -511,6 +524,7 @@
         const option = [...$('#teacher-graphs').options].find((item) => item.value === graphId);
         if (option) option.textContent = `${graph.title} · ${result.version}`;
       }
+      renderShareLink();
       msg(dirty || pendingForms.size
         ? `Published ${result.version}. New edits remain in this workspace and are not published; save them as a new draft.`
         : `Published ${result.version}. The share link now serves this version.`);
