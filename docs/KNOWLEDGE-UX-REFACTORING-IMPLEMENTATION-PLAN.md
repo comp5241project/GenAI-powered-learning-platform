@@ -143,6 +143,16 @@ Commit `6b264a0` generated a READY Vercel Preview deployment, target `null` (not
 
 The final READY Preview deployment for commit `072af46` was checked again in Chrome. The student signed in, opened My Knowledge and saw the previously imported QA note and its relationship alongside existing versioned references; the page explicitly reported account mode. After signing out, the teacher signed in and gained the Teacher workspace link. The workspace loaded the saved QA graph and private draft; opening its saved case editor showed both claims, both concept links, source fields and their reasons. Cancel edit reported that form changes were discarded and the draft was unchanged. These checks verify deployed reads and navigation; they do not by themselves prove a new deployed write, concurrent request handling or an actual screen-reader session.
 
+Migration-history readback on 2026-10-23 confirms the Preview project has three records. The mapping below is by migration purpose/name; equality of the historical SQL bodies has **not** been established.
+
+| Local file version | Preview history version | Preview history name | Verified state |
+| --- | --- | --- | --- |
+| `20261021000100` | `20261021102200` | `skillloop_knowledge_backend_v1` | Name/purpose correspondence only; compare SQL and installed functions before history repair. |
+| `20261021000200` | `20261021102206` | `skillloop_knowledge_network_v2` | Name/purpose correspondence only; compare SQL and installed functions before history repair. |
+| `20261022111424` | `20261022204545` | `update_personal_edge_reason` | The SQL was applied from this checkout; policy and column grant verified, whole-table UPDATE absent. |
+
+Do not run automatic migration push against this project or a release target based solely on the local filenames. First compare applied database objects with each local migration, then reconcile migration history using an environment-specific reviewed procedure. Do not mark a migration applied merely to silence a version mismatch. No history repair or production migration was performed in this implementation.
+
 **Release gates still open:** finish representative concurrent-write checks and an actual screen-reader review. Exercise a new account import and teacher save through the deployed UI if a release gate requires end-to-end write proof; the same writes and data invariants already passed through the local loopback proxy against the preview project. Review the migration history/version mismatch before automated promotion, and apply/verify the additive migration in each target environment only as part of a separately authorized release. No production action is implied by this record.
 
 ## AC01–AC12 acceptance audit
