@@ -13,9 +13,17 @@
   let selectedRelationshipId = null;
   let teacherEdges = [];
   let adding = false;
+  let edgeSelectionTouched = false;
+  let creating = false;
   const noteDrafts = new Map();
   const connectionDrafts = new Map();
   let pendingWrites = 0;
+  function hasCreationDraft() {
+    if (!adding) return false;
+    const note = $('#kn-add-note').elements;
+    const edge = $('#kn-add-edge').elements;
+    return !!(note.title.value.trim() || note.body.value.trim() || edge.reason.value.trim() || edgeSelectionTouched);
+  }
   const canvas = new K.Canvas($('#kn-canvas'), { editable: true, onSelect: select,
     onSelectEdge: selectRelationship, onMove: move });
   function status(message) { $('#kn-account-state').textContent = message; }
@@ -75,7 +83,11 @@
     canvas.set(data.nodes, [...teacherEdges, ...data.edges.filter((edge) => present.has(edge.source) && present.has(edge.target))]);
     renderList();
     const selects = $('#kn-add-edge').querySelectorAll('select');
-    selects.forEach((select) => options(select, data.nodes));
+    selects.forEach((select) => {
+      const value = select.value;
+      options(select, data.nodes);
+      if ([...select.options].some((option) => option.value === value)) select.value = value;
+    });
     if (selectedRelationshipId && [...teacherEdges, ...data.edges].some((edge) => edge.id === selectedRelationshipId))
       canvas.selectEdge(selectedRelationshipId);
     else if (selectedId && present.has(selectedId)) canvas.select(selectedId);
@@ -88,6 +100,7 @@
     const connectionForm = $('#kn-add-edge');
     if (node && connectionForm.dataset.pickingTarget === 'true' && node.id !== connectionForm.elements.source.value) {
       connectionForm.elements.target.value = node.id;
+      edgeSelectionTouched = true;
       $('#kn-connect-status').textContent = `Target selected: ${title(node)}. Enter a reason, then connect the nodes.`;
     }
     const box = $('#kn-selected');
@@ -163,8 +176,12 @@
       const connect = K.make('button', 'sl-btn', 'Connect from this node');
       connect.type = 'button';
       connect.addEventListener('click', () => {
-        adding = true; render();
+        if (creating) return;
         const form = $('#kn-add-edge');
+        if ((form.elements.reason.value.trim() || edgeSelectionTouched) &&
+            !window.confirm('Discard the unfinished connection and start a new one?')) return;
+        form.reset(); edgeSelectionTouched = false;
+        adding = true; render();
         form.elements.source.value = node.id;
         form.dataset.pickingTarget = 'true';
         $('#kn-connect-status').textContent = 'Choose a target on the graph or from search results, or use the To menu.';
@@ -265,7 +282,7 @@
     render();
   }
   window.addEventListener('beforeunload', (event) => {
-    if (!noteDrafts.size && !connectionDrafts.size && !pendingWrites) return;
+    if (!noteDrafts.size && !connectionDrafts.size && !hasCreationDraft() && !pendingWrites) return;
     event.preventDefault(); event.returnValue = '';
   });
   $('#kn-create-first').addEventListener('click', () => {
@@ -279,10 +296,15 @@
     $('#kn-add-note [name=title]').focus();
   });
   $('#kn-add-cancel').addEventListener('click', () => {
+    if (creating) return;
     $('#kn-add-note').reset(); $('#kn-add-edge').reset();
+    edgeSelectionTouched = false;
     delete $('#kn-add-edge').dataset.pickingTarget;
     $('#kn-connect-status').textContent = 'Choose a target on the graph or from search results, or use the To menu.';
     adding = false; $('#kn-add-section').hidden = true;
+  });
+  $('#kn-add-edge').addEventListener('change', (event) => {
+    if (event.target.matches('select')) edgeSelectionTouched = true;
   });
   $('#kn-search').addEventListener('input', () => { renderList(); canvas.highlight($('#kn-search').value); });
   $('#kn-zoom-in').addEventListener('click', () => canvas.zoom(1.2));
@@ -290,31 +312,61 @@
   $('#kn-reset').addEventListener('click', () => canvas.resetView());
   $('#kn-add-note').addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (creating) return;
     const form = event.currentTarget;
+    const formControls = [...form.elements];
     const title = form.elements.title.value.trim();
     const body = form.elements.body.value.trim();
     const node = { id: `note:${crypto.randomUUID()}`, kind: 'note', title, body,
       x: 80 + data.nodes.length % 4 * 220, y: 80 + Math.floor(data.nodes.length / 4) * 130 };
+    creating = true; pendingWrites += 1;
+    $('#kn-add-cancel').disabled = true;
+    formControls.forEach((control) => { control.disabled = true; });
+    $('#kn-add-edge button[type=submit]').disabled = true;
     try {
       if (signedIn) await K.api('personal-note', 'POST', node);
       data.nodes.push(node);
-      if (!signedIn && !K.saveLocal(data)) status('Node is visible on this page only; reload or navigation will lose it because browser storage is unavailable.');
-      form.reset(); adding = false; render(); canvas.focus(node.id);
+      const persisted = signedIn || K.saveLocal(data);
+      form.reset(); adding = hasCreationDraft(); render();
+      if (!adding) canvas.focus(node.id);
+      if (!persisted) status('Node is visible on this page only; reload or navigation will lose it because browser storage is unavailable.');
+      else if (adding) status('Node created. Your unfinished connection remains in the Add and connect form.');
+      else status('Node created and saved.');
     } catch (error) { status(error.message); }
+    finally {
+      pendingWrites -= 1; creating = false;
+      $('#kn-add-cancel').disabled = false;
+      formControls.forEach((control) => { control.disabled = false; });
+      $('#kn-add-edge button[type=submit]').disabled = false;
+    }
   });
   $('#kn-add-edge').addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (creating) return;
     const form = event.currentTarget;
+    const formControls = [...form.elements];
     const source = form.elements.source.value, target = form.elements.target.value;
     if (source === target) { status('Choose two different nodes.'); return; }
     if (data.edges.some((edge) => edge.source === source && edge.target === target)) { status('This personal connection already exists.'); return; }
     const edge = { id: crypto.randomUUID(), source, target, reason: form.elements.reason.value.trim(), kind: 'personal' };
+    creating = true; pendingWrites += 1;
+    $('#kn-add-cancel').disabled = true;
+    $('#kn-add-note button[type=submit]').disabled = true;
+    formControls.forEach((control) => { control.disabled = true; });
     try {
       if (signedIn) await K.api('personal-edge', 'POST', edge);
       data.edges.push(edge);
-      if (!signedIn && !K.saveLocal(data)) status('Connection is visible on this page only; reload or navigation will lose it because browser storage is unavailable.');
-      form.reset(); delete form.dataset.pickingTarget; adding = false; render(); canvas.focus(target);
+      const persisted = signedIn || K.saveLocal(data);
+      form.reset(); edgeSelectionTouched = false; delete form.dataset.pickingTarget;
+      adding = hasCreationDraft(); render(); canvas.focus(target);
+      status(persisted ? 'Connection saved.' : 'Connection is visible on this page only; reload or navigation will lose it because browser storage is unavailable.');
     } catch (error) { status(error.message); }
+    finally {
+      pendingWrites -= 1; creating = false;
+      $('#kn-add-cancel').disabled = false;
+      $('#kn-add-note button[type=submit]').disabled = false;
+      formControls.forEach((control) => { control.disabled = false; });
+    }
   });
   try {
     const session = await K.api('session');
