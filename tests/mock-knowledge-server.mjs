@@ -39,7 +39,11 @@ createServer(async (req, res) => {
       if (op === 'my-graphs') return respond(res, 200, { graphs: [...graphs.values()].map(({ id, title, current_version }) =>
         ({ id, title, current_version })) });
       if (op === 'draft') {
-        if (req.method === 'GET') return respond(res, 200, { draft: graph ? { revision: graph.revision, payload: graph.payload } : null });
+        if (req.method === 'GET') {
+          const delay = Math.min(5000, Math.max(0, Number(process.env.MOCK_DRAFT_DELAY_MS) || 0));
+          if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
+          return respond(res, 200, { draft: graph ? { revision: graph.revision, payload: graph.payload } : null });
+        }
         if (!graph) return respond(res, 404, { error: 'Graph not found' });
         if (input.expectedRevision !== graph.revision) return respond(res, 409, { error: 'Draft changed' });
         graph.payload = input.payload; graph.revision = crypto.randomUUID();

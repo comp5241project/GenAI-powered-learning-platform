@@ -2,7 +2,7 @@
   const K = window.KnowledgeNetwork;
   const $ = K.$;
   let signedIn = false, graphId = null, draft = null, revision = null, dirty = false, selectedId = null;
-  let saving = false, publishing = false, editSequence = 0, loadSequence = 0, backendAvailable = true;
+  let saving = false, publishing = false, transitioning = false, editSequence = 0, loadSequence = 0, backendAvailable = true;
   const pendingForms = new Set();
   let graphList = [];
   const canvas = new K.Canvas($('#teacher-canvas'), { editable: true, onSelect: selectTopic,
@@ -35,10 +35,18 @@
   function controls() {
     $('#teacher-login').hidden = signedIn || !backendAvailable;
     $('#teacher-logout').hidden = !signedIn;
-    $('#teacher-workspace').hidden = !signedIn;
-    $('#teacher-save').disabled = !draft || saving || publishing;
-    $('#teacher-reviewed').disabled = !draft || !revision || dirty || saving || publishing || !!pendingForms.size;
-    $('#teacher-publish').disabled = !draft || !revision || dirty || saving || publishing || !!pendingForms.size || !$('#teacher-reviewed').checked;
+    $('#teacher-logout').disabled = transitioning;
+    $('#teacher-workspace').hidden = !signedIn || transitioning;
+    $('#teacher-save').disabled = !draft || saving || publishing || transitioning;
+    $('#teacher-reviewed').disabled = !draft || !revision || dirty || saving || publishing || transitioning || !!pendingForms.size;
+    $('#teacher-publish').disabled = !draft || !revision || dirty || saving || publishing || transitioning || !!pendingForms.size || !$('#teacher-reviewed').checked;
+  }
+  async function withWorkspaceTransition(message, action) {
+    if (transitioning) return false;
+    const previousStatus = $('#teacher-status').textContent;
+    transitioning = true; $('#teacher-status').textContent = message; controls();
+    try { await action(); return true; }
+    finally { transitioning = false; controls(); $('#teacher-status').textContent = previousStatus; }
   }
   function optionList(selector) {
     const select = $(selector);
@@ -264,13 +272,18 @@
       form.elements.password.value = '';
       const session = await K.api('session');
       if (session.role !== 'teacher') throw new Error('Teacher role required.');
-      signedIn = true; controls(); await graphs(); $('#teacher-status').textContent = `Signed in as ${session.email}.`;
-    } catch (error) { $('#teacher-status').textContent = `Sign in failed: ${error.message}`; }
+      signedIn = true;
+      await withWorkspaceTransition('Loading your graphs…', graphs);
+      $('#teacher-status').textContent = `Signed in as ${session.email}.`;
+    } catch (error) { $('#teacher-status').textContent = signedIn
+      ? `Signed in, but graphs could not load: ${error.message}. Reload to retry.`
+      : `Sign in failed: ${error.message}`; }
     finally { button.disabled = false; }
   });
   $('#teacher-logout').addEventListener('click', async () => {
     if (!await protectDraft()) return;
-    try { await K.api('logout', 'POST', {}); } catch { /* Close editor locally. */ }
+    try { await withWorkspaceTransition('Signing out…', () => K.api('logout', 'POST', {})); }
+    catch (error) { $('#teacher-status').textContent = `Sign out failed: ${error.message}. Retry.`; return; }
     signedIn = false; graphId = null; draft = null; revision = null;
     sessionStorage.removeItem('skillloop.knowledge.preview');
     $('#teacher-frame').hidden = true; controls(); $('#teacher-status').textContent = 'Signed out.';
@@ -279,29 +292,47 @@
     event.preventDefault();
     if (!await protectDraft()) return;
     const form = event.currentTarget;
-    try {
+    const oldGraph = graphId, oldRevision = revision;
+    let createdId = null;
+    try { await withWorkspaceTransition('Creating graph…', async () => {
       const result = await K.api('create-graph', 'POST', { title: formValue(form, 'title') });
+      createdId = result.id;
       graphId = result.id; form.reset(); await graphs();
-    } catch (error) { msg(error.message); }
+    }); } catch (error) {
+      graphId = oldGraph; revision = oldRevision;
+      $('#teacher-graphs').value = oldGraph || '';
+      msg(createdId ? `Graph created, but could not be loaded: ${error.message}. Reload to recover it.` : error.message);
+    }
   });
   $('#teacher-create-sample').addEventListener('click', async () => {
     if (!await protectDraft()) return;
-    try {
+    const oldGraph = graphId, oldRevision = revision;
+    let createdId = null;
+    try { await withWorkspaceTransition('Creating sample graph…', async () => {
       const result = await K.api('create-graph', 'POST', { title: 'Software development sample' });
+      createdId = result.id;
       const payload = structuredClone(window.SkillLoopGraph);
       payload.publication.id = result.id;
       payload.publication.publishedAt = new Date().toISOString().slice(0, 10);
       payload.publication.version = `${payload.publication.publishedAt}.1`;
       await K.api('draft', 'POST', { graphId: result.id, payload, expectedRevision: result.revision });
       graphId = result.id; await graphs();
-    } catch (error) { msg(error.message); }
+    }); } catch (error) {
+      graphId = oldGraph; revision = oldRevision;
+      $('#teacher-graphs').value = oldGraph || '';
+      msg(createdId ? `Sample graph created, but setup could not finish: ${error.message}. Reload to recover it.` : error.message);
+    }
   });
   $('#teacher-graphs').addEventListener('change', async (event) => {
-    const oldGraph = graphId, nextGraph = event.target.value;
+    const oldGraph = graphId, oldRevision = revision, nextGraph = event.target.value;
     event.target.value = oldGraph || '';
     if (!await protectDraft()) return;
-    graphId = nextGraph;
-    try { await loadDraft(); } catch (error) { graphId = oldGraph; event.target.value = oldGraph || ''; msg(error.message); }
+    try { await withWorkspaceTransition('Loading selected graph…', async () => {
+      graphId = nextGraph;
+      await loadDraft();
+      event.target.value = nextGraph;
+    }); } catch (error) { graphId = oldGraph; revision = oldRevision;
+      event.target.value = oldGraph || ''; controls(); msg(error.message); }
   });
   $('#teacher-search').addEventListener('input', renderGraph);
   $('#teacher-zoom-in').addEventListener('click', () => canvas.zoom(1.2));
@@ -434,7 +465,7 @@
     finally { saving = false; controls(); }
   }
   async function protectDraft() {
-    if (saving || publishing) { msg('Wait for the current request to finish.'); return false; }
+    if (saving || publishing || transitioning) { msg('Wait for the current request to finish.'); return false; }
     if (!dirty && !pendingForms.size) return true;
     const choice = window.prompt('Unsaved teacher draft. Type SAVE, DISCARD, or CANCEL.', 'CANCEL')?.trim().toUpperCase();
     if (choice === 'SAVE') return saveDraft();
@@ -442,7 +473,7 @@
     return false;
   }
   window.addEventListener('beforeunload', (event) => {
-    if (!dirty && !pendingForms.size && !saving) return;
+    if (!dirty && !pendingForms.size && !saving && !transitioning) return;
     event.preventDefault(); event.returnValue = '';
   });
   $('#teacher-save').addEventListener('click', saveDraft);
@@ -506,7 +537,13 @@
     backendAvailable = !!session.backendConfigured;
     controls();
     if (session.signedIn && session.role === 'teacher') {
-      signedIn = true; controls(); await graphs(); $('#teacher-status').textContent = `Signed in as ${session.email}.`;
+      signedIn = true;
+      try {
+        await withWorkspaceTransition('Loading your graphs…', graphs);
+        $('#teacher-status').textContent = `Signed in as ${session.email}.`;
+      } catch (error) {
+        $('#teacher-status').textContent = `Signed in, but graphs could not load: ${error.message}. Reload to retry.`;
+      }
     } else if (session.signedIn) $('#teacher-status').textContent = 'Teacher role required.';
     else if (!session.backendConfigured) $('#teacher-status').textContent = 'Teacher editing needs the Supabase URL and publishable key configured in this deployment, plus a teacher account. You can explore the sample public graph without signing in.';
     else $('#teacher-status').textContent = 'Sign in with a teacher account to edit and publish graphs.';
