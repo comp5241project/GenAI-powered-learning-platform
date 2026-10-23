@@ -39,29 +39,35 @@
               >
             </div>
 
+            <ol class="iv-journey" id="iv-journey" aria-label="Interview steps">
+              <li aria-current="step"><span>1</span>Choose a topic</li>
+              <li><span>2</span>Answer 3 questions</li>
+              <li><span>3</span>Review & improve</li>
+            </ol>
+
             <section id="iv-setup" aria-labelledby="iv-home-title">
+              <p id="iv-home-notice" class="iv-home-notice" role="status" hidden></p>
               <header class="iv-welcome">
                 <div>
-                  <p class="iv-eyebrow">YOUR PRACTICE SPACE</p>
-                  <h1 id="iv-home-title">Make your thinking clear.</h1>
+                  <p class="iv-eyebrow">TECHNICAL INTERVIEW PRACTICE</p>
+                  <h1 id="iv-home-title">Practise explaining your decisions.</h1>
                   <p class="iv-muted iv-welcome-copy">
-                    A short conversation. A chance to try again.
+                    Answer three short interview questions, then review and improve your answers.
                   </p>
+                  <p class="iv-small iv-muted">Type at your own pace. No timer or microphone.</p>
                 </div>
                 <div class="iv-conversation-art" aria-hidden="true">
                   <span class="iv-art-line"></span>
                   <span class="iv-art-node"><i data-lucide="message-circle"></i></span>
                   <span class="iv-art-node iv-art-focus"><i data-lucide="git-branch"></i></span>
                   <span class="iv-art-node"><i data-lucide="notebook-pen"></i></span>
-                  <span class="iv-art-caption">explain <span>explore</span> reflect</span>
+                  <span class="iv-art-caption">choose <span>answer</span> improve</span>
                 </div>
               </header>
 
               <div class="iv-section-heading">
-                <h2>Choose a focus</h2>
-                <button type="button" class="iv-text-button" id="iv-settings">
-                  <i data-lucide="sliders-horizontal" aria-hidden="true"></i>Activity settings
-                </button>
+                <h2>What would you like to practise?</h2>
+                <span class="iv-small iv-muted">Choose one topic</span>
               </div>
               <div class="iv-topics" id="iv-topics" role="group" aria-label="Practice focus"></div>
 
@@ -69,9 +75,9 @@
                 <div class="iv-launch-copy">
                   <div class="iv-meta">
                     <span id="iv-course-label">SOFTWARE DEVELOPMENT</span><span>~5 min</span
-                    ><span>3 turns</span>
+                    ><span>3 questions</span>
                   </div>
-                  <h2 id="iv-activity-title"></h2>
+                  <h2 id="iv-activity-title" aria-live="polite"></h2>
                   <p id="iv-objective" class="iv-muted"></p>
                   <a
                     id="iv-lesson-setup"
@@ -84,19 +90,32 @@
                   ></a>
                 </div>
                 <div class="iv-launch-action">
-                  <label for="iv-level">Support</label>
+                  <label for="iv-level">How much support?</label>
                   <select id="iv-level">
                     <option value="guided">With guidance</option>
                     <option value="independent">On my own</option>
                   </select>
                   <button type="button" class="iv-button iv-primary" id="iv-start">
-                    Start practice<i data-lucide="arrow-right" aria-hidden="true"></i>
+                    Start interview<i data-lucide="arrow-right" aria-hidden="true"></i>
                   </button>
                   <button type="button" class="iv-text-button" id="iv-new" hidden>
                     Start a fresh session
                   </button>
                 </div>
               </section>
+              <p class="iv-demo-note">
+                Demo: preset questions and self-review. Live AI feedback is not connected yet.
+              </p>
+
+              <details class="iv-teacher-tools">
+                <summary>Customise this activity</summary>
+                <p class="iv-small iv-muted">
+                  Change the questions and review criteria for a new session.
+                </p>
+                <button type="button" class="iv-text-button" id="iv-settings">
+                  <i data-lucide="sliders-horizontal" aria-hidden="true"></i>Edit activity
+                </button>
+              </details>
 
               <section class="iv-history" aria-labelledby="iv-history-title">
                 <div class="iv-section-heading">
@@ -123,13 +142,16 @@
                     <div class="iv-partner">
                       <span class="iv-partner-icon"
                         ><i data-lucide="audio-lines" aria-hidden="true"></i></span
-                      ><span>Practice partner</span
+                      ><span>Interviewer</span
                       ><span id="iv-turn-label" class="iv-turn-label"></span>
                     </div>
                     <h2 id="iv-question" tabindex="-1"></h2>
                     <p id="iv-guidance" class="iv-muted iv-small"></p>
-                    <div class="iv-moves" id="iv-moves">
-                      <p class="iv-moves-label">Pick a first move <span>optional</span></p>
+                    <details class="iv-moves" id="iv-moves">
+                      <summary>Need a starting point? <span>Optional</span></summary>
+                      <p class="iv-small iv-muted">
+                        Choose an approach to explore a scenario, then write your answer below.
+                      </p>
                       <div id="iv-move-options" class="iv-move-options"></div>
                       <p
                         id="iv-consequence"
@@ -138,13 +160,14 @@
                         aria-live="polite"
                         hidden
                       ></p>
-                    </div>
+                    </details>
                     <form id="iv-answer-form">
-                      <label class="iv-answer-label" for="iv-answer">Your approach</label>
+                      <label class="iv-answer-label" for="iv-answer">Your answer</label>
                       <textarea
                         id="iv-answer"
                         maxlength="5000"
                         required
+                        aria-describedby="iv-guidance iv-next-step"
                         placeholder="Talk through what you would do, and why…"
                       ></textarea>
                       <div class="iv-editor-status">
@@ -153,30 +176,29 @@
                       </div>
                       <div class="iv-answer-actions">
                         <button type="button" class="iv-text-button" id="iv-hint">
-                          <i data-lucide="lightbulb" aria-hidden="true"></i>A small hint</button
+                          <i data-lucide="lightbulb" aria-hidden="true"></i>Show hint</button
                         ><button type="submit" class="iv-button iv-primary" id="iv-send">
-                          Send answer<i data-lucide="arrow-right" aria-hidden="true"></i>
+                          Next question<i data-lucide="arrow-right" aria-hidden="true"></i>
                         </button>
                       </div>
+                      <p id="iv-next-step" class="iv-next-step"></p>
                     </form>
                     <p id="iv-hint-content" class="iv-hint" hidden></p>
                   </div>
                   <details class="iv-earlier" id="iv-earlier">
-                    <summary>
-                      Earlier in this conversation<span id="iv-earlier-count"></span>
-                    </summary>
+                    <summary>Previous answers<span id="iv-earlier-count"></span></summary>
                     <div id="iv-earlier-list"></div>
                   </details>
                 </div>
                 <aside class="iv-session-aside" aria-label="Session progress">
                   <div class="iv-aside-heading">
                     <i data-lucide="route" aria-hidden="true"></i>
-                    <h2>A little room to think</h2>
+                    <h2>Your three questions</h2>
                   </div>
                   <ol id="iv-progress"></ol>
                   <div class="iv-aside-note">
                     <i data-lucide="notebook-pen" aria-hidden="true"></i>
-                    <p>Your answers stay yours.<br />You can revisit and revise them.</p>
+                    <p>After question 3, review all your answers and try a revision.</p>
                   </div>
                   <a
                     id="iv-lesson-practice"
@@ -194,8 +216,12 @@
                   <p class="iv-eyebrow">
                     <i data-lucide="circle-check" aria-hidden="true"></i>SESSION COMPLETE
                   </p>
-                  <h1 id="iv-review-title">Review your thinking.</h1>
+                  <h1 id="iv-review-title">Your interview, ready to review.</h1>
                   <p class="iv-muted" id="iv-review-subtitle"></p>
+                  <p class="iv-review-guide">
+                    Read an answer, check the criteria, then edit anything you would explain
+                    differently.
+                  </p>
                 </div>
                 <button type="button" class="iv-text-button" id="iv-home">
                   <i data-lucide="arrow-left" aria-hidden="true"></i>All practice
@@ -215,14 +241,14 @@
                   ><strong id="iv-revision-total">0</strong><span>revisions</span>
                 </div>
                 <span class="iv-review-note"
-                  ><i data-lucide="bookmark-check" aria-hidden="true"></i>Added to your field
-                  notes.</span
+                  ><i data-lucide="bookmark-check" aria-hidden="true"></i
+                  ><span id="iv-review-saved">Saved in this browser</span></span
                 >
               </div>
               <div class="iv-review-layout">
                 <div>
                   <div class="iv-section-heading">
-                    <h2>The conversation</h2>
+                    <h2>Review & edit your answers</h2>
                     <button type="button" class="iv-text-button" id="iv-export">
                       <i data-lucide="download" aria-hidden="true"></i>Export
                     </button>
@@ -237,18 +263,20 @@
                   <p class="iv-muted iv-small">Your own review, not an AI score.</p>
                   <div id="iv-checklist"></div>
                   <label class="iv-reflection-label" for="iv-reflection"
-                    >One thing to try next time</label
+                    >One thing to try next time (optional)</label
                   ><textarea
                     id="iv-reflection"
                     maxlength="1000"
-                    placeholder="A question to ask, a test to add…"
+                    placeholder="One change I will make in my next answer…"
                   ></textarea
                   ><a
                     id="iv-lesson-review"
                     class="iv-button iv-secondary"
                     href="../knowledge-map/?topic=software-testing"
                     ><i data-lucide="book-open" aria-hidden="true"></i>Back to the lesson</a
-                  ><button type="button" class="iv-button iv-primary" id="iv-again">
+                  ><button type="button" class="iv-button iv-primary" id="iv-done">
+                    Done<i data-lucide="check" aria-hidden="true"></i></button
+                  ><button type="button" class="iv-text-button" id="iv-again">
                     Practise again<i data-lucide="rotate-ccw" aria-hidden="true"></i>
                   </button>
                 </aside>

@@ -1,6 +1,8 @@
 # Interview studio - module 3
 
-A focused course activity: choose a topic, explain an approach, explore two follow-ups and review the conversation. Open `/interview/` using the repository's static server.
+A short course-linked interview: choose a topic, answer three questions, then review and improve an answer. Open `/interview/` using the repository's static server.
+
+The three-stage path stays visible throughout. Each question states what to write and what the next button does. Optional scenario cards and activity editing stay collapsed until needed. Returning learners see the question they will resume. The review preserves the original answer, supports revisions and ends with a Done action and a saved-record confirmation.
 
 ## What works
 

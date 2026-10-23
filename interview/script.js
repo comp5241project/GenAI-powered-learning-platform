@@ -93,6 +93,12 @@
   }
   function show(view, focus = false) {
     for (const name of views) $('#iv-' + name).hidden = name !== view;
+    [...$('#iv-journey').children].forEach((step, index) => {
+      const current = index === views.indexOf(view);
+      step.classList.toggle('is-done', index < views.indexOf(view));
+      if (current) step.setAttribute('aria-current', 'step');
+      else step.removeAttribute('aria-current');
+    });
     announce('');
     if (focus) {
       const heading =
@@ -120,6 +126,7 @@
   }
   function renderHome(focus = false) {
     session = null;
+    $('#iv-home-notice').hidden = true;
     const chosen = activity();
     const topics = $('#iv-topics');
     topics.replaceChildren();
@@ -153,10 +160,20 @@
       : 'SOFTWARE DEVELOPMENT';
     const draft = pending();
     $('#iv-start').replaceChildren(
-      document.createTextNode(draft ? 'Resume practice' : 'Start practice'),
+      document.createTextNode(draft ? 'Continue interview' : 'Start interview'),
       icon('arrow-right')
     );
     $('#iv-new').hidden = !draft;
+    $('#iv-resume-note')?.remove();
+    if (draft) {
+      const note = element(
+        'p',
+        'iv-small iv-muted',
+        'Continue at question ' + (draft.answers.length + 1) + ' of 3. Your draft is saved.'
+      );
+      note.id = 'iv-resume-note';
+      $('#iv-objective').after(note);
+    }
     $('#iv-level').disabled = Boolean(draft);
     if (draft) $('#iv-level').value = draft.level;
     $('#iv-storage-label').textContent = storageAvailable
@@ -173,6 +190,7 @@
     const records = state.sessions.filter(
       (item) => !context.courseId || item.context.courseId === context.courseId
     );
+    $('.iv-history').hidden = !records.length;
     if (!records.length) {
       const empty = element('div', 'iv-empty');
       empty.append(icon('notebook-pen'), element('p', '', 'Your next conversation starts here.'));
@@ -224,38 +242,47 @@
     }
     renderPractice(true);
   }
-  function renderPractice(focus = false) {
+  function renderPractice(focus = false, answerSaved = false) {
     const turn = session.answers.length;
     if (session.status === 'completed') return renderReview(focus);
     $('#iv-session-topic').textContent = session.activity.topic || 'COURSE PRACTICE';
     $('#iv-session-title').textContent = session.activity.title;
-    $('#iv-turn-label').textContent = turn + 1 + ' / 3';
+    $('#iv-turn-label').textContent = 'Question ' + (turn + 1) + ' of 3';
     $('#iv-question').textContent = session.activity.prompts[turn];
     $('#iv-guidance').textContent =
       session.level === 'guided'
-        ? 'Give an example. Explain why you would choose it.'
-        : 'State your assumptions and explain your trade-offs.';
+        ? 'Write a few sentences about what you would do and why. A concrete example helps.'
+        : 'Explain your decision, assumptions and trade-offs in a few sentences.';
     $('#iv-answer').value = session.draft;
     $('#iv-answer').setCustomValidity('');
     updateDraftStatus();
     $('#iv-send').replaceChildren(
-      document.createTextNode(turn === 2 ? 'Finish & review' : 'Send answer'),
+      document.createTextNode(turn === 2 ? 'Review my answers' : 'Next question'),
       icon('arrow-right')
     );
+    $('#iv-next-step').textContent =
+      turn === 2
+        ? 'Next: see all three answers. You can edit them there.'
+        : 'Next: question ' + (turn + 2) + ' of 3. You can revise this answer at the end.';
     $('#iv-hint-content').textContent = session.activity.hints[turn];
     $('#iv-hint-content').hidden = !session.hints.includes(turn);
     $('#iv-hint').setAttribute('aria-expanded', String(!$('#iv-hint-content').hidden));
+    $('#iv-hint').replaceChildren(
+      icon('lightbulb'),
+      document.createTextNode($('#iv-hint-content').hidden ? 'Show hint' : 'Hide hint')
+    );
     renderMoves();
     renderProgress();
     renderEarlier();
     updateLessonLinks(session);
     show('practice', focus);
+    if (focus && answerSaved) announce('Answer saved. Question ' + (turn + 1) + ' of 3.');
     app.icons();
   }
   function updateDraftStatus() {
     $('#iv-count').textContent = session.draft.length.toLocaleString('en') + ' / 5,000';
     $('#iv-draft-status').textContent = storageAvailable
-      ? 'Draft saved · Ctrl / ⌘ + Enter to send'
+      ? 'Draft saved · Ctrl / ⌘ + Enter to continue'
       : 'Stored for this visit only';
   }
   function renderMoves() {
@@ -265,6 +292,7 @@
     const target = $('#iv-move-options');
     target.replaceChildren();
     const choice = session.decisions?.find((item) => item.turn === turn);
+    $('#iv-moves').open = Boolean(choice);
     $('#iv-consequence').hidden = !choice;
     $('#iv-consequence').textContent = choice?.consequence || '';
     for (const item of options) {
@@ -287,9 +315,9 @@
     const target = $('#iv-progress');
     target.replaceChildren();
     const stages = [
-      ['Explain', 'Share your approach', 'message-circle'],
-      ['Explore', 'Consider a new angle', 'git-branch'],
-      ['Reflect', 'Explain your decision', 'notebook-pen'],
+      ['Your approach', 'Explain what you would do', 'message-circle'],
+      ['A follow-up', 'Consider a new situation', 'git-branch'],
+      ['Your decision', 'Explain your next action', 'notebook-pen'],
     ];
     stages.forEach(([title, description, symbol], index) => {
       const done = index < session.answers.length;
@@ -336,9 +364,12 @@
     if (session.status === 'completed') {
       event('session-completed');
       renderReview(true);
-    } else renderPractice(true);
+    } else renderPractice(true, true);
   }
   function renderReview(focus = false) {
+    $('#iv-review-saved').textContent = storageAvailable
+      ? 'Saved in this browser'
+      : 'Saved for this visit only';
     $('#iv-review-subtitle').textContent = session.activity.title;
     $('#iv-answer-total').textContent = String(session.answers.length);
     $('#iv-hint-total').textContent = String(session.hints.length);
@@ -357,7 +388,7 @@
       const card = element('details', 'iv-review-card');
       card.id = 'iv-review-turn-' + index;
       card.open = index === 0;
-      card.append(element('summary', '', answer.question));
+      card.append(element('summary', '', 'Question ' + (index + 1) + ' · ' + answer.question));
       const body = element('div', 'iv-review-body');
       const decision = session.decisions?.find((item) => item.turn === index);
       if (decision) {
@@ -394,7 +425,7 @@
         });
         body.append(history);
       }
-      const revise = button('Try a clearer answer', 'iv-text-button', 'pencil-line');
+      const revise = button('Edit this answer', 'iv-text-button', 'pencil-line');
       revise.addEventListener('click', () => {
         if (body.querySelector('form')) return;
         const form = element('form', 'iv-revision-editor');
@@ -429,7 +460,8 @@
           event('answer-revised');
           renderReview();
           const updated = $('#iv-review-turn-' + index);
-          updated.open = true;
+          for (const reviewCard of document.querySelectorAll('.iv-review-card'))
+            reviewCard.open = reviewCard === updated;
           updated.querySelector('summary').focus();
           announce('Revision saved. Your first answer is still here.');
         });
@@ -478,6 +510,16 @@
     renderHome(true);
   });
   $('#iv-home').addEventListener('click', () => renderHome(true));
+  $('#iv-done').addEventListener('click', () => {
+    save();
+    renderHome(true);
+    const notice = $('#iv-home-notice');
+    notice.textContent =
+      (storageAvailable
+        ? 'Interview saved in this browser.'
+        : 'Interview saved for this visit only.') + ' Reopen it in Recent practice below.';
+    notice.hidden = false;
+  });
   $('#iv-again').addEventListener('click', () => {
     const current = session;
     selected = current.activity.id;
@@ -515,6 +557,11 @@
     }
     $('#iv-hint-content').hidden = !$('#iv-hint-content').hidden;
     $('#iv-hint').setAttribute('aria-expanded', String(!$('#iv-hint-content').hidden));
+    $('#iv-hint').replaceChildren(
+      icon('lightbulb'),
+      document.createTextNode($('#iv-hint-content').hidden ? 'Show hint' : 'Hide hint')
+    );
+    app.icons();
   });
   $('#iv-reflection').addEventListener('input', () => {
     session.reflection = $('#iv-reflection').value;
