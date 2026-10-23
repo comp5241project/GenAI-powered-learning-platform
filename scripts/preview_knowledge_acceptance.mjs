@@ -84,6 +84,22 @@ student = await login('student@example.com', studentPassword);
 assert.equal(ok(await call('session', { cookie: teacher }), 'teacher session').role, 'teacher');
 assert.equal(ok(await call('session', { cookie: student }), 'student session').role, 'student');
 
+if (process.argv.includes('--concurrent-only')) {
+  const graphId = process.env.KNOWLEDGE_PREVIEW_GRAPH_ID;
+  if (!graphId) throw new Error('Set KNOWLEDGE_PREVIEW_GRAPH_ID to the preview QA graph.');
+  const draft = ok(await call('draft', { cookie: teacher, query: { graph: graphId } }), 'draft before concurrent saves').draft;
+  const body = { graphId, payload: draft.payload, expectedRevision: draft.revision };
+  const results = await Promise.all([1, 2].map(() => call('draft', { method: 'POST', cookie: teacher, body })));
+  assert.deepEqual(results.map((result) => result.status).sort(), [200, 409],
+    `Concurrent saves did not produce one winner and one conflict: ${JSON.stringify(results.map((result) => result.status))}`);
+  const latest = ok(await call('draft', { cookie: teacher, query: { graph: graphId } }), 'draft after concurrent saves').draft;
+  assert.deepEqual(latest.payload, draft.payload, 'Identical concurrent saves changed draft content.');
+  assert.notEqual(latest.revision, draft.revision, 'Winning save did not advance the revision.');
+  process.stdout.write(`${JSON.stringify({ graphId, oneSaveAccepted: true, staleSaveRejected: true,
+    payloadPreserved: true, revisionAdvanced: true })}\n`);
+  process.exit(0);
+}
+
 if (process.argv.includes('--import-only')) {
   const graphId = process.env.KNOWLEDGE_PREVIEW_GRAPH_ID;
   if (!graphId) throw new Error('Set KNOWLEDGE_PREVIEW_GRAPH_ID to the preview QA graph.');
