@@ -1,60 +1,68 @@
-# Interview studio - module 3
+# Interview room — module 3
 
-A short course-linked interview: choose a topic, answer three questions, then review and improve an answer. Open `/interview/` using the repository's static server.
+A course-linked mock interview inside the normal SkillLoop workspace. Opening the page starts or resumes the conversation. Maya asks one question at a time; the input box is always visible. Reply ideas add a short starter to that box and never submit an answer.
 
-The three-stage path stays visible throughout. Each question states what to write and what the next button does. Optional scenario cards and activity editing stay collapsed until needed. Returning learners see the question they will resume. The review preserves the original answer, supports revisions and ends with a Done action and a saved-record confirmation.
+After each reply, the AI returns a brief observation, one suggestion and a follow-up based on the actual answer. A conversation ends after three to five replies. The final review links feedback to exact answer quotes, offers a possible rewrite, and compares a saved revision with the original. No hiring score or mastery claim is generated.
 
-## What works
+Without AI configuration, an explicitly labelled demo runs locally with four authored questions, practice notes and scenario examples. Its notes are not an assessment of the student. Demo sessions stay demos; failed AI calls do not silently switch modes.
 
-- Three authored activities: software testing, requirements and AI code review.
-- Optional strategy cards reveal a scenario consequence. The opening choice changes the next question.
-- Guided or independent opening questions, per-turn hints and a three-step progress trail.
-- Draft saving, resume, recent sessions, reflection and self-review checkboxes.
-- Revisions preserve the first answer. The review shows the first and latest versions side by side, with intermediate revisions available when present.
-- Editable activity drafts and JSON export of a practice record.
-- Keyboard controls, small-screen layouts and reduced-motion support.
+## Run
 
-The page clearly labels **Sample mode**. Prompts and branches are authored, not AI-generated. Checkboxes are the student's self-review, not automated feedback or a mastery score. Activity settings are local drafts; there is no teacher authentication or course publication here yet.
-
-## Files
-
-| File             | Responsibility                                                      |
-| ---------------- | ------------------------------------------------------------------- |
-| `index.html`     | Setup, practice, review and activity dialog                         |
-| `style.css`      | Interview-specific layout using the shared brand colours            |
-| `data.js`        | Authored activities, hints, strategy branches and review criteria   |
-| `model.js`       | Session validation, state transitions, revisions and source context |
-| `script.js`      | Page rendering, events, persistence and export                      |
-| `model.test.cjs` | Dependency-free session and integration-boundary checks             |
-| `DESIGN.md`      | Award references and the interaction decisions they informed        |
-
-## Connect to other modules
-
-Link to `/interview/` with optional query parameters:
-
-```text
-/interview/?courseId=se101&activityId=act4&conceptId=requirements
-```
-
-- `conceptId` selects a matching sample focus; the older `topic` alias also works.
-- `courseId` and `activityId` identify the source course activity. They are metadata; the page does not fetch a published activity based on these IDs yet.
-- `graphId` (or `graph`) and `publicationVersion` (or `version`) are retained in the practice record for later knowledge-network integration.
-- `returnTo` can preserve the exact source page, including graph and version parameters. Use a URL-encoded local path under `/knowledge-map/` or `/learning-path/`. External destinations are rejected. Without it, the lesson link uses the compatible `/knowledge-map/?topic=...` route.
-- The current shared `profile.background` can initialise the support level. Module 2's newer private storage schema is not read; agree its public contract before adding an adapter.
-
-The session snapshots its activity, so editing an activity cannot silently rewrite an existing conversation. The next backend should load and validate published activities, provide live questions and feedback, and save sessions with the team's shared authentication. Keep API credentials and role checks on the server. Do not treat URL IDs as proof of course access.
-
-## Storage
-
-Uses `SkillLoop.read/write('interviewStudio', ...)`, giving the browser key `skillloop.v1.interviewStudio`. Up to twelve sessions are kept, and the setup page shows the five most recently updated records. Each answer permits ten saved revisions and 5,000 characters; reflection permits 1,000 characters.
-
-The original `interview` state remains untouched. Its saved draft is copied into a resumable session on first use. Other modules' records are not changed. Shared activity events contain IDs and event types, not answer text. No cross-device sync is provided. When storage is unavailable, the page labels its visit-only memory fallback.
-
-## Check the module
+Use Node.js 22 or later:
 
 ```sh
-node --test interview/model.test.cjs
+npm ci
+npm run dev:interview
+```
+
+Open `http://127.0.0.1:8765/interview/`. This server serves the existing static modules and the interview API. A plain static server or the portable HTML preview can run the demo, but cannot run AI calls.
+
+## Connect AI later
+
+1. Copy `.env.example` to the uncommitted `.env.local` file, or use the Vercel project's environment settings.
+2. Set `AI_GATEWAY_MODEL` to an available text model ID from `https://ai-gateway.vercel.sh/v1/models`.
+3. For local development, set `AI_GATEWAY_API_KEY`. Vercel deployments can use their OIDC token instead when the project's Gateway access is enabled. A model and working Gateway access are both required.
+4. Restart the local server or redeploy. Check that a real interview, per-turn notes, final review, rewrite and comparison all succeed. Configuration detection alone does not verify provider access or credits.
+
+Credentials stay on the server. The browser only calls `/api/interview`. The implementation uses the installed AI SDK's structured output support and validates feedback quotes against the submitted answer. Calls are bounded and time out with a retry action. Budget and account access are managed in the owning Vercel account; this module does not provision either.
+
+No live provider request has been verified yet. The SDK and browser/API flows have been tested with mock model output, separately from the authored demo. Before wider use, connect the team's shared account permissions and any project-wide request limits.
+
+## Main files
+
+| File                                    | Purpose                                                              |
+| --------------------------------------- | -------------------------------------------------------------------- |
+| `index.html`, `style.css`, `script.js`  | Interview scene, input, notes, review and notebook                   |
+| `story.js`                              | Shared conversation state, validation and demo scenarios             |
+| `server.cjs`                            | Server-only AI prompts, schemas and validation                       |
+| `../api/interview.js`                   | Vercel endpoint: configuration check and AI requests                 |
+| `../scripts/interview-dev.cjs`          | Local static/API preview server                                      |
+| `story.test.cjs`                        | State, evidence and installed-SDK boundary tests                     |
+| `model.js`, `data.js`, `model.test.cjs` | Earlier prototype compatibility; old records are readable in History |
+
+## API
+
+`GET /api/interview` returns `{ available: boolean }`, reflecting configuration only.
+
+`POST /api/interview` accepts `{ action, session, index? }`. Actions are `turn`, `review`, `rewrite` and `compare`. The endpoint returns `{ source: "ai", result }`, or a safe error. Model output is structured and checked before rendering. The server uses canonical topics and goals; transcript text cannot supply system instructions. No secrets, raw provider errors or answer content are logged by this module.
+
+`turn` includes `feedback.observation`, `feedback.suggestion`, an exact `feedback.quote`, the next question, reply starters and a completion flag. Opening feedback is empty. Later notes must reference the latest answer. Starters are assistance, not an answer key.
+
+## Records and integration
+
+- Uses `skillloop.v1.interviewStory`; earlier `interviewStudio` and `interview` keys are not overwritten.
+- Keeps up to 30 conversations, original replies, per-turn notes, a review, example suggestions, revision drafts, eight revisions per answer, and saved version comparisons.
+- An inserted reply idea is marked as assistance. A rewrite suggestion stays separate until the learner edits and saves a version. Applying a suggestion records its assisted origin.
+- Reply drafts and revision drafts survive refresh. A submitted reply is saved before the next AI request, so retrying does not duplicate it. Changing a revision invalidates its older comparison.
+- History shows activity counts, not claimed improvement scores. Export downloads the complete record as JSON. Storage is local to this browser; no cross-device sync is claimed. Blocked storage is labelled as visit-only.
+- `courseId`, `activityId`, `conceptId` (or `topic`), `graphId` (or `graph`), `publicationVersion` (or `version`) and a safe `returnTo` path are retained. The concept selects the matching sample topic. A shared `profile.background` can guide the AI's level. URL IDs are metadata, not course-access checks.
+- The related-lesson link returns to the source knowledge map or learning path. The API does not fetch published instructor activities yet; add that through the team's agreed course/auth interface.
+
+## Check
+
+```sh
+npm run test:interview
 python scripts/check_site.py
 ```
 
-In the browser, try a strategy choice, request a hint, save a draft and reload. Complete all three answers, revise one, tick a review criterion and reload again. Confirm that both answer versions remain available. Test the activity dialog with a keyboard and check 390px and 320px widths.
+Walk through typing, inserting and editing an idea, per-turn feedback, leaving and resuming, review, a suggestion, a revision, comparison and export. Also check an interrupted response and 390px/320px layouts. See `DESIGN.md` for design evidence and walkthrough findings.

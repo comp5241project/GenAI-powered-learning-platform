@@ -1,16 +1,16 @@
 # Deploy to Vercel
 
-This is a plain static site. Deploy the whole repository as one project.
+Deploy the static pages and the interview API as one project.
 
 ## Initial setup
 
 1. In Vercel, import `comp5241project/SkillLoop` using a GitHub account that can access it.
 2. Set the production branch to `main`.
 3. Use Framework Preset **Other** and the repository root as Root Directory.
-4. Leave Build Command and Install Command empty. Use `.` as Output Directory if Vercel asks for one.
-5. Deploy. This prototype does not need environment variables or a database.
+4. Keep the Build Command empty. The repository config sets Install Command to `npm ci --omit=dev`; use `.` as Output Directory.
+5. Deploy. Demo mode needs no AI credentials or database. See the interview README to enable live AI.
 
-The root contains `index.html`. Each module has its own `index.html`; directory URLs such as `/interview/` therefore work directly. `vercel.json` sets the framework to Other, skips installation and building, and serves the repository root. It also enables clean URLs and trailing slashes. Do not add a rewrite that sends every URL to the home page: this is a multi-page site.
+The root contains `index.html`. Each module has its own `index.html`; directory URLs such as `/interview/` work directly. `vercel.json` selects Other, installs the locked dependencies, skips a frontend build and serves the repository root. `api/interview.js` runs as a Node.js function. Clean URLs and trailing slashes are enabled. Do not add a catch-all SPA rewrite.
 
 After connecting the repository, Vercel can deploy new main commits and provide branch/PR previews, subject to the project's Git integration settings. Pushing this repository alone does not create or confirm a Vercel deployment.
 
@@ -33,10 +33,10 @@ Open the failed deployment in Vercel and read its Build Logs. The GitHub status 
 npx vercel inspect <deployment-id> --logs
 ```
 
-Check that Root Directory points to the repository root and Production Branch is `main`. Build settings are defined in `vercel.json`; no `npm run build`, `dist` directory or API key is needed. If the log reports a permission or Git author error, resolve that account access issue before retrying.
+Check that Root Directory points to the repository root and Production Branch is `main`. Settings are defined in `vercel.json`; no `npm run build` or `dist` directory is needed. Node.js 22 or later is required. If the log reports a permission or Git author error, resolve that account access issue before retrying.
 
-## Later AI integration
+## Interview AI configuration
 
-When a real AI backend is added, agree a server-side API first. Configure credentials as server-side environment variables; do not put them in the HTML or browser JavaScript. Document the new install/build/deployment steps at that time.
+Set `AI_GATEWAY_MODEL` to an available text model ID. Local development also needs `AI_GATEWAY_API_KEY` in the uncommitted `.env.local`; Vercel deployments can use their OIDC token with working Gateway access. Credentials never belong in HTML or browser JavaScript. See [interview setup](../interview/README.md) for the API and checks. A successful configuration check does not prove provider access or credits; verify one complete AI conversation after setup. No live provider call has been verified yet.
 
 Reference: [Vercel project configuration](https://vercel.com/docs/project-configuration).

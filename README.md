@@ -4,7 +4,7 @@ Short software development lessons, personalised learning paths, mock interviews
 
 Live site: [skillloop-sigma.vercel.app](https://skillloop-sigma.vercel.app/).
 
-This repository is a **static prototype** built with HTML, CSS and JavaScript. There is no framework, package installation or build step. Each team member can work in one module folder.
+The pages use HTML, CSS and JavaScript without a frontend framework or build step. Each team member works in one module folder. The interview also has a small server-side AI endpoint.
 
 ## Run it locally
 
@@ -15,6 +15,8 @@ python -m http.server 8000
 ```
 
 Open [http://localhost:8000](http://localhost:8000). On Windows, `py -m http.server 8000` also works if Python is installed through the Python launcher. A local static-server extension such as VS Code Live Server can be used instead.
+
+For the interview API, use Node.js 22 or later: run `npm ci`, then `npm run dev:interview`, and open `http://127.0.0.1:8765/interview/`. It runs an authored demo until AI is configured. See [interview setup](interview/README.md).
 
 ## Where each person works
 
@@ -45,11 +47,11 @@ SkillLoop/
 
 - Explore seven sample knowledge-map nodes, read mini-lessons and mark them as studied.
 - Choose a background and goal, answer a diagnostic question and open recommended lessons.
-- Save an interview answer, view a scripted follow-up and review answers, revisions and hints.
+- Practise with a conversational interviewer, type replies, use optional reply starters and revisit the record. With AI configured, receive per-turn feedback, adaptive follow-ups, an overall review and version comparisons.
 - Write a counterexample to an authored code example and open a reference explanation.
 - Refresh or switch pages without losing browser-local progress.
 
-Recommendations are rules-based. Interview questions and correction explanations are preset. This starter does **not** call an AI service, execute submitted code, automatically grade open-ended answers, or provide accounts, a database or teacher administration.
+Learning-path recommendations and correction explanations are preset. The interview has separate demo and AI modes; AI requires server configuration. This prototype does not execute submitted code or provide shared accounts, a database or teacher administration.
 
 The team's separate [Code Review Bureau prototype](https://sonic-fiddle-gzb7c64.vercel.app/bureau.html) is linked from the correction module. Its original source has not been imported into this repository. It can be integrated later when that source is available.
 
@@ -80,7 +82,7 @@ This checks the expected module files, local HTML links, asset paths, duplicate 
 
 ## Deploy
 
-Import `comp5241project/SkillLoop` into Vercel as a static project. Use the repository root, select the **Other** preset, leave install and build commands empty, and serve the repository root (`.`). No environment variables are required for this prototype. See [deployment notes](docs/DEPLOYMENT.md).
+Import `comp5241project/SkillLoop` into Vercel using the **Other** preset and repository root. `vercel.json` installs the locked AI SDK dependencies with `npm ci --omit=dev`, skips a frontend build and serves `.` with the interview function. Demo mode needs no AI credentials; live AI needs server-side configuration. See [deployment notes](docs/DEPLOYMENT.md).
 
 ## References
 

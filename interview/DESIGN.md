@@ -1,44 +1,33 @@
-# Interview studio design
+# Interview room design
 
-The interview is a course activity: choose a focus, explain an approach, explore a scenario change, then revisit the answer. The interface keeps one question prominent and defers history and configuration until needed.
+The module stays inside SkillLoop's shared navigation and warm white, charcoal, terracotta and muted olive palette. Only the central activity becomes a conversation: an original vector interviewer, one dialogue bubble and an always-visible input box. There is no full-screen takeover or setup dashboard.
 
-## References
+## Interaction
 
-These references inform interaction patterns. Their branding, illustrations and screen layouts are not included in this repository.
+Entering starts or resumes a course-related interview. The interviewer introduces herself, asks a concrete opening question and follows the learner's replies. Typing is the main action. Optional reply ideas insert incomplete starters; they neither choose a correct answer nor send a reply. The learner can edit or ignore them.
 
-| Reference                                                   | Verified award                           | Adaptation in this module                                                                                                                            |
-| ----------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [CapWords](https://developer.apple.com/design/awards/2025/) | Apple Design Award 2025, Delight and Fun | A small action reveals useful new information. Strategy cards reveal an authored scenario consequence rather than adding a decorative points system. |
-| [Crouton](https://developer.apple.com/design/awards/2024/)  | Apple Design Award 2024, Interaction     | One step and one primary action at a time; earlier answers and activity settings are secondary.                                                      |
-| [Rytmos](https://developer.apple.com/design/awards/2024/)   | Apple Design Award 2024, Interaction     | Progress builds gradually. A three-step path fills as the learner contributes, and the complete conversation is assembled at the end.                |
+Each AI turn supplies a short observation grounded in an exact answer quote, one useful suggestion and a follow-up. Detailed analysis waits for the final review. The AI can close after three to five replies rather than always asking three fixed questions. It does not assign a hiring score or infer unaided mastery from an assisted reply.
 
-The adaptations above are our design decisions, not claims that these products implement interview activities or prove learning gains.
+The review preserves the actual conversation. Suggestions, original replies and saved learner revisions remain separate. Comparing versions is a separate AI request, and editing the saved version invalidates the old comparison. Drafts are saved before navigation or network requests; failed calls can be retried without duplicating a reply.
 
-## Clarity and learning
+## References and limits
 
-- [Amershi et al., Guidelines for Human-AI Interaction, CHI 2019](https://www.microsoft.com/en-us/research/publication/guidelines-for-human-ai-interaction/): set expectations about capability and quality. The entry explains the task, input method and output; a visible demo note identifies preset questions and self-review. No AI score is implied.
-- [W3C WAI, Multi-page Forms](https://www.w3.org/WAI/tutorials/forms/multi-page/) and [clear step-by-step instructions](https://www.w3.org/WAI/WCAG2/supplemental/patterns/o4p07-step-instructions/): expose the sequence, current step and optional actions. The page shows Choose a topic / Answer 3 questions / Review & improve, explicit question counts, nearby writing instructions and destination-specific buttons. Practice is untimed.
-- [Nielsen, Progressive Disclosure](https://www.nngroup.com/articles/progressive-disclosure/?lm=listbox-dropdown&pt=article): defer secondary controls. Scenario choices are optional help; custom activity tools and earlier answers are collapsed. The answer field remains the main task.
+- [Amershi et al., Guidelines for Human-AI Interaction, CHI 2019](https://www.microsoft.com/en-us/research/publication/guidelines-for-human-ai-interaction/): clarify capability and support correction. Demo and AI modes are distinct, errors preserve the conversation, and suggestions stay editable.
+- [W3C WAI, clear step-by-step instructions](https://www.w3.org/WAI/WCAG2/supplemental/patterns/o4p07-step-instructions/): instructions sit beside the relevant action. The input and Send reply remain visible, and reply ideas explain that insertion does not send.
+- [Nielsen, Progressive Disclosure](https://www.nngroup.com/articles/progressive-disclosure/?lm=listbox-dropdown&pt=article): keep the current question prominent. Scenario switching, reply ideas, earlier conversations and the full transcript open only when requested.
+- [CapWords, Apple Design Awards 2025](https://developer.apple.com/design/awards/2025/), and [Crouton / Rytmos, 2024](https://developer.apple.com/design/awards/2024/): earlier references for small responsive interactions and task focus. No branding, illustration or screen asset is copied.
 
-These principles guide the interface; they do not establish that this prototype improves interview performance. Revisions and reflection are optional. The three questions concern software-development decisions, evidence and trade-offs, rather than a generic personality quiz or decorative game.
+These are design adaptations, not evidence of learning gains. Student and instructor usability sessions are still needed. No claim of real AI quality is made from mock-provider tests.
 
-## Walkthrough iterations
+## Walkthrough changes
 
-The following are developer walkthroughs using a local browser, not participant usability studies.
+| Walkthrough   | Finding                                                                      | Change                                                                                                                   |
+| ------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| First visit   | A setup dashboard and several abstract stage names resembled a worksheet.    | Open the interview directly, retain the familiar workspace, and keep one question and one input prominent.               |
+| Reply ideas   | Clicking a supplied answer bypassed the learner's own explanation.           | Insert a short starter into the input, require Send reply, and preserve assisted-input provenance.                       |
+| Conversation  | A fixed question list and end-only self-check did not feel responsive.       | Add an AI observation, suggestion and answer-dependent follow-up at each turn; retain notes in the transcript.           |
+| Recovery      | A failed request could leave a learner unsure whether their answer was sent. | Save the reply before requesting the next turn. Resume an unanswered request without submitting the reply again.         |
+| Revision      | Navigating or refreshing could discard an unfinished new version.            | Auto-save revision drafts; save explicit versions separately; hide stale comparisons while editing.                      |
+| Visual review | Full-screen styling separated the activity from the rest of SkillLoop.       | Restore shared navigation and the contained conversation panel. Keep the illustration stable and respect reduced motion. |
 
-| Pass                | Task and observation                                                                                                                                                                                                   | Change                                                                                                                                                                                               |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| First use           | Complete three answers, revise one, finish. Abstract opening copy and no clear ending made the task difficult to explain.                                                                                              | Concrete entry instructions, visible journey, next-question labels, numbered review answers, Done and a saved confirmation.                                                                          |
-| Resume              | Choose a scenario, answer once, save a second draft, exit, reload, continue and reopen the review. The opening did not say where a saved session continued; restoring could show a misleading new-answer confirmation. | Show the resumed question number and only announce a newly saved answer after submission. Give hint controls explicit Show / Hide states.                                                            |
-| Mobile and revision | Complete a different topic at 390px and 320px, revise the second answer, finish and change topic. Reopening the first answer after a later revision lengthened the review; the two progress trails competed on phones. | Keep only the edited answer expanded after saving. Show the overall journey and current question count on small screens, hide the redundant side trail, and use larger touch targets and input text. |
-
-Final browser checks cover scenario branches, draft/hint persistence, three-question completion, original/revised comparison, review persistence, export, custom activity isolation, narrow layouts, course/version context, legacy import, corrupt storage and blocked storage. Real student and instructor feedback remains the next validation step.
-
-## Boundaries
-
-- Reuse SkillLoop's warm white, charcoal, terracotta and gold colours and its local Lucide icons.
-- Use native buttons, text fields, details and dialog controls. Every strategy can be selected with a keyboard; drag gestures are unnecessary.
-- Strategy choices, hint use, original submissions, revisions and reflection belong to the practice record. Checkboxes are self-review, not automatically inferred mastery.
-- Keep sample mode visible. Authored branches are not a connected AI interviewer.
-- Course context is data, separate from page styling and sample content. Activity settings are local drafts, not an instructor account or publishing system.
-- Respect reduced motion. Do not add a countdown, sound, streak penalties or random scores to this activity.
+The authored demo, mocked AI flow, installed SDK validation and mobile layouts are checked separately. Live provider access remains unverified until the team configures its AI service.
