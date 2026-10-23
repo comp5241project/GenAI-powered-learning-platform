@@ -1,13 +1,58 @@
-# Mock interview - module 3
+# Interview studio - module 3
 
-Work mainly in this folder.
+A focused course activity: choose a topic, explain an approach, explore two follow-ups and review the conversation. Open `/interview/` using the repository's static server.
 
-- `index.html`: question, answer editor, hint, follow-up and replay.
-- `script.js`: draft saving, answer revisions and process history.
-- `style.css`: styles unique to this module.
+## What works
 
-Open `/interview/`. This starter uses a scripted software-testing question and follow-up. It is not connected to a model and does not grade answers. State uses the `interview` key.
+- Three authored activities: software testing, requirements and AI code review.
+- Optional strategy cards reveal a scenario consequence. The opening choice changes the next question.
+- Guided or independent opening questions, per-turn hints and a three-step progress trail.
+- Draft saving, resume, recent sessions, reflection and self-review checkboxes.
+- Revisions preserve the first answer. The review shows the first and latest versions side by side, with intermediate revisions available when present.
+- Editable activity drafts and JSON export of a practice record.
+- Keyboard controls, small-screen layouts and reduced-motion support.
 
-Check empty-answer validation, hints, first submission, revisions, literal rendering of typed markup, and reload persistence. Saved answers and hints should remain visible in the replay.
+The page clearly labels **Sample mode**. Prompts and branches are authored, not AI-generated. Checkboxes are the student's self-review, not automated feedback or a mastery score. Activity settings are local drafts; there is no teacher authentication or course publication here yet.
 
-Add real AI feedback later through an agreed server-side API. See [data contracts](../docs/DATA-CONTRACTS.md) and [team tasks](../docs/MODULE-TASKS.md).
+## Files
+
+| File             | Responsibility                                                      |
+| ---------------- | ------------------------------------------------------------------- |
+| `index.html`     | Setup, practice, review and activity dialog                         |
+| `style.css`      | Interview-specific layout using the shared brand colours            |
+| `data.js`        | Authored activities, hints, strategy branches and review criteria   |
+| `model.js`       | Session validation, state transitions, revisions and source context |
+| `script.js`      | Page rendering, events, persistence and export                      |
+| `model.test.cjs` | Dependency-free session and integration-boundary checks             |
+| `DESIGN.md`      | Award references and the interaction decisions they informed        |
+
+## Connect to other modules
+
+Link to `/interview/` with optional query parameters:
+
+```text
+/interview/?courseId=se101&activityId=act4&conceptId=requirements
+```
+
+- `conceptId` selects a matching sample focus; the older `topic` alias also works.
+- `courseId` and `activityId` identify the source course activity. They are metadata; the page does not fetch a published activity based on these IDs yet.
+- `graphId` (or `graph`) and `publicationVersion` (or `version`) are retained in the practice record for later knowledge-network integration.
+- `returnTo` can preserve the exact source page, including graph and version parameters. Use a URL-encoded local path under `/knowledge-map/` or `/learning-path/`. External destinations are rejected. Without it, the lesson link uses the compatible `/knowledge-map/?topic=...` route.
+- The current shared `profile.background` can initialise the support level. Module 2's newer private storage schema is not read; agree its public contract before adding an adapter.
+
+The session snapshots its activity, so editing an activity cannot silently rewrite an existing conversation. The next backend should load and validate published activities, provide live questions and feedback, and save sessions with the team's shared authentication. Keep API credentials and role checks on the server. Do not treat URL IDs as proof of course access.
+
+## Storage
+
+Uses `SkillLoop.read/write('interviewStudio', ...)`, giving the browser key `skillloop.v1.interviewStudio`. Up to twelve sessions are kept, and the setup page shows the five most recently updated records. Each answer permits ten saved revisions and 5,000 characters; reflection permits 1,000 characters.
+
+The original `interview` state remains untouched. Its saved draft is copied into a resumable session on first use. Other modules' records are not changed. Shared activity events contain IDs and event types, not answer text. No cross-device sync is provided. When storage is unavailable, the page labels its visit-only memory fallback.
+
+## Check the module
+
+```sh
+node --test interview/model.test.cjs
+python scripts/check_site.py
+```
+
+In the browser, try a strategy choice, request a hint, save a draft and reload. Complete all three answers, revise one, tick a review criterion and reload again. Confirm that both answer versions remain available. Test the activity dialog with a keyboard and check 390px and 320px widths.

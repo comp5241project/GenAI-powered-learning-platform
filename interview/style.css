@@ -1,1 +1,1116 @@
-/* Styles specific to interview. Shared components are in ../shared/styles.css. */
+/* Interview-only styles. Brand colours and the shared navigation stay in shared/. */
+#skillloop-prototype .sl-main {
+  padding: 30px 42px 48px;
+}
+#interview-app {
+  max-width: 1120px;
+  margin: 0 auto;
+  --iv-radius: 18px;
+}
+#interview-app button,
+#interview-app a,
+#interview-app input,
+#interview-app textarea,
+#interview-app select {
+  -webkit-tap-highlight-color: transparent;
+}
+#interview-app :is(button, a, input, textarea, select, summary):focus-visible {
+  outline: 2px solid var(--sl-accent);
+  outline-offset: 4px;
+}
+#interview-app :is(button, input, select, textarea) {
+  font: inherit;
+}
+#interview-app button {
+  color: inherit;
+}
+#interview-app a {
+  text-decoration: none;
+}
+#interview-app h1 {
+  font-size: clamp(30px, 3.25vw, 46px);
+  font-weight: 500;
+  letter-spacing: -1.8px;
+  line-height: 1.14;
+  margin: 12px 0;
+}
+#interview-app h2 {
+  font-size: 17px;
+  font-weight: 550;
+  letter-spacing: -0.4px;
+  line-height: 1.4;
+  margin: 0;
+}
+#interview-app h3 {
+  font-size: 14px;
+  line-height: 1.5;
+}
+#interview-app [hidden] {
+  display: none !important;
+}
+#interview-app .iv-muted {
+  color: var(--sl-sub);
+}
+#interview-app .iv-small {
+  font-size: 12px;
+}
+#interview-app .iv-toolbar,
+#interview-app .iv-breadcrumb,
+#interview-app .iv-section-heading,
+#interview-app .iv-session-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+#interview-app .iv-toolbar {
+  margin-bottom: 52px;
+}
+#interview-app .iv-breadcrumb {
+  justify-content: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--sl-sub);
+}
+#interview-app .iv-breadcrumb svg {
+  width: 16px;
+  height: 16px;
+}
+#interview-app .iv-breadcrumb span:last-child {
+  color: var(--sl-text);
+}
+#interview-app .iv-mode {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--sl-line);
+  border-radius: 20px;
+  padding: 5px 10px;
+  font-size: 11px;
+  color: var(--sl-sub);
+  white-space: nowrap;
+}
+#interview-app .iv-mode > span {
+  width: 5px;
+  height: 5px;
+  background: var(--sl-accent);
+  border-radius: 50%;
+}
+#interview-app .iv-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 44px;
+}
+#interview-app .iv-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  color: var(--sl-accent);
+}
+#interview-app .iv-welcome-copy {
+  font-size: 14px;
+  margin-top: 16px;
+}
+#interview-app .iv-conversation-art {
+  width: 230px;
+  height: 112px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  position: relative;
+  padding-bottom: 20px;
+}
+#interview-app .iv-art-line {
+  position: absolute;
+  top: 45px;
+  left: 25px;
+  right: 25px;
+  height: 1px;
+  background: var(--sl-line);
+}
+#interview-app .iv-art-node {
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 1px solid var(--sl-line);
+  background: var(--sl-bg);
+  color: var(--sl-sub);
+}
+#interview-app .iv-art-focus {
+  width: 60px;
+  height: 60px;
+  color: var(--sl-accent);
+  background: var(--sl-soft);
+  border-color: #e6c1b5;
+  box-shadow: 0 0 0 7px color-mix(in srgb, var(--sl-soft) 55%, transparent);
+}
+#interview-app .iv-art-focus svg {
+  width: 25px;
+  height: 25px;
+}
+#interview-app .iv-art-caption {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  color: var(--sl-sub);
+  font-size: 10px;
+  letter-spacing: 0.4px;
+}
+#interview-app .iv-art-caption span {
+  color: var(--sl-accent);
+}
+#interview-app .iv-section-heading {
+  margin-bottom: 16px;
+}
+#interview-app .iv-text-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  padding: 7px 0;
+  background: transparent;
+  font-size: 12px;
+  color: var(--sl-sub);
+  cursor: pointer;
+}
+#interview-app .iv-text-button:hover {
+  color: var(--sl-accent);
+}
+#interview-app .iv-text-button svg {
+  width: 15px;
+  height: 15px;
+}
+#interview-app .iv-topics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+#interview-app .iv-topic {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 11px;
+  text-align: left;
+  background: var(--sl-panel);
+  border: 1px solid var(--sl-line);
+  border-radius: 14px;
+  padding: 20px;
+  min-height: 155px;
+}
+#interview-app .iv-topic:hover {
+  border-color: #c9b9aa;
+  transform: translateY(-2px);
+}
+#interview-app .iv-topic[aria-pressed='true'] {
+  border-color: var(--sl-accent);
+  background: #fcf7f3;
+  box-shadow: 0 0 0 1px var(--sl-accent);
+}
+#interview-app .iv-topic-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--sl-sub);
+  border-radius: 9px;
+  background: var(--sl-bg);
+}
+#interview-app .iv-topic[aria-pressed='true'] .iv-topic-icon {
+  color: var(--sl-accent);
+  background: var(--sl-soft);
+}
+#interview-app .iv-topic-title {
+  font-size: 14px;
+  font-weight: 550;
+}
+#interview-app .iv-topic-description {
+  font-size: 11px;
+  color: var(--sl-sub);
+}
+#interview-app .iv-topic-check {
+  position: absolute;
+  right: 15px;
+  top: 18px;
+  width: 15px;
+  height: 15px;
+  color: var(--sl-accent);
+}
+#interview-app .iv-launch {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 195px;
+  gap: 35px;
+  border: 1px solid var(--sl-line);
+  border-radius: var(--iv-radius);
+  padding: 28px;
+  background: var(--sl-panel);
+}
+#interview-app .iv-launch h2 {
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: -0.8px;
+  margin: 15px 0 9px;
+}
+#interview-app .iv-launch-copy > p {
+  font-size: 13px;
+  max-width: 500px;
+  line-height: 1.65;
+}
+#interview-app .iv-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--sl-sub);
+  font-size: 11px;
+}
+#interview-app .iv-meta span:first-child {
+  color: var(--sl-accent);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.3px;
+}
+#interview-app .iv-meta span + span::before {
+  content: '·';
+  margin-right: 12px;
+  color: #b0a99b;
+}
+#interview-app .iv-launch-action {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  gap: 9px;
+}
+#interview-app .iv-launch-action label {
+  font-size: 11px;
+  color: var(--sl-sub);
+}
+#interview-app select {
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid var(--sl-line);
+  border-radius: 9px;
+  padding: 10px;
+  background: white;
+  color: var(--sl-text);
+}
+#interview-app .iv-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 11px 16px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+}
+#interview-app .iv-button svg {
+  width: 16px;
+  height: 16px;
+}
+#interview-app .iv-primary {
+  background: var(--sl-accent);
+  color: white;
+  box-shadow: 0 2px 0 #913820;
+}
+#interview-app .iv-primary:hover {
+  background: #9d3d24;
+}
+#interview-app .iv-primary:active {
+  box-shadow: none;
+}
+#interview-app .iv-secondary {
+  border-color: var(--sl-line);
+  background: white;
+  color: var(--sl-text);
+}
+#interview-app .iv-inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--sl-sub);
+  margin-top: 22px;
+}
+#interview-app .iv-inline-link:hover {
+  color: var(--sl-accent);
+}
+#interview-app .iv-inline-link svg {
+  width: 14px;
+  height: 14px;
+}
+#interview-app .iv-history {
+  margin-top: 40px;
+}
+#interview-app .iv-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#interview-app .iv-history-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  gap: 14px;
+  border: 0;
+  border-top: 1px solid var(--sl-line);
+  padding: 16px 2px;
+  background: transparent;
+}
+#interview-app .iv-history-item:hover .iv-history-title {
+  color: var(--sl-accent);
+}
+#interview-app .iv-history-item > svg:first-child {
+  width: 20px;
+  color: var(--sl-sub);
+}
+#interview-app .iv-history-copy {
+  flex: 1;
+  min-width: 0;
+}
+#interview-app .iv-history-title {
+  display: block;
+  font-size: 13px;
+}
+#interview-app .iv-history-meta {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--sl-sub);
+}
+#interview-app .iv-history-tag {
+  font-size: 10px;
+  color: var(--sl-sub);
+  padding: 4px 8px;
+  background: #ebe9e2;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+#interview-app .iv-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px dashed #d8d3c9;
+  border-radius: 12px;
+  padding: 24px;
+  color: var(--sl-sub);
+  font-size: 12px;
+}
+#interview-app .iv-empty svg {
+  color: #aaa393;
+}
+#interview-app .iv-session-heading {
+  margin: -10px 0 28px;
+  align-items: flex-start;
+}
+#interview-app .iv-session-heading h1 {
+  font-size: 31px;
+  letter-spacing: -1px;
+  margin-top: 10px;
+}
+#interview-app .iv-session-heading > button {
+  flex-shrink: 0;
+}
+#interview-app .iv-practice-layout,
+#interview-app .iv-review-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 235px;
+  gap: 25px;
+  align-items: start;
+}
+#interview-app .iv-question-card {
+  border: 1px solid var(--sl-line);
+  background: white;
+  border-radius: var(--iv-radius);
+  padding: 28px;
+  box-shadow: 0 6px 20px #3e321204;
+}
+#interview-app .iv-partner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--sl-sub);
+}
+#interview-app .iv-partner-icon {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  color: var(--sl-accent);
+  border: 1px solid #eccfc3;
+  background: #fcf4ee;
+  border-radius: 10px;
+}
+#interview-app .iv-partner-icon svg {
+  width: 17px;
+  height: 17px;
+}
+#interview-app .iv-turn-label {
+  margin-left: auto;
+  font-size: 10px;
+  white-space: nowrap;
+}
+#interview-app #iv-question {
+  font-size: clamp(20px, 2.1vw, 27px);
+  font-weight: 500;
+  letter-spacing: -0.6px;
+  line-height: 1.45;
+  margin: 24px 0 12px;
+}
+#interview-app #iv-question:focus {
+  outline: none;
+}
+#interview-app .iv-moves {
+  margin-top: 23px;
+}
+#interview-app .iv-moves-label {
+  color: var(--sl-sub);
+  font-size: 11px;
+}
+#interview-app .iv-moves-label span {
+  color: #928c80;
+  margin-left: 5px;
+  font-size: 10px;
+}
+#interview-app .iv-move-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+#interview-app .iv-move {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  gap: 7px;
+  background: var(--sl-bg);
+  border: 1px solid var(--sl-line);
+  border-radius: 9px;
+  padding: 10px;
+  font-size: 11px;
+}
+#interview-app .iv-move svg {
+  width: 15px;
+  height: 15px;
+}
+#interview-app .iv-move[aria-pressed='true'] {
+  border-color: var(--sl-accent);
+  color: var(--sl-accent);
+  background: var(--sl-soft);
+}
+#interview-app .iv-consequence {
+  background: #f8f4e8;
+  border-left: 2px solid #d4b65e;
+  border-radius: 0 8px 8px 0;
+  padding: 12px;
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.65;
+  animation: iv-reveal 0.2s ease-out;
+}
+#interview-app .iv-answer-label {
+  display: block;
+  margin: 26px 0 9px;
+  font-size: 12px;
+  font-weight: 500;
+}
+#interview-app textarea {
+  display: block;
+  resize: vertical;
+  width: 100%;
+  max-width: 100%;
+  min-height: 165px;
+  padding: 15px;
+  color: var(--sl-text);
+  background: #fcfbf8;
+  border: 1px solid #dedacf;
+  border-radius: 10px;
+  line-height: 1.7;
+  font-size: 13px;
+}
+#interview-app textarea::placeholder {
+  color: #979187;
+}
+#interview-app .iv-editor-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 10px;
+  color: #8a8478;
+  padding: 9px 1px;
+}
+#interview-app .iv-answer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 14px;
+}
+#interview-app .iv-hint {
+  margin-top: 18px;
+  border-top: 1px solid var(--sl-line);
+  padding-top: 14px;
+  color: var(--sl-sub);
+  font-size: 12px;
+}
+#interview-app .iv-session-aside {
+  padding: 22px 2px 0 8px;
+}
+#interview-app .iv-aside-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+#interview-app .iv-aside-heading > svg {
+  color: var(--sl-accent);
+  width: 17px;
+  height: 17px;
+}
+#interview-app .iv-aside-heading h2 {
+  font-size: 13px;
+}
+#interview-app #iv-progress {
+  list-style: none;
+  margin: 28px 0;
+  padding: 0;
+}
+#interview-app .iv-stage {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  min-height: 72px;
+  padding: 0 0 18px;
+  color: #928b80;
+}
+#interview-app .iv-stage:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  width: 1px;
+  background: var(--sl-line);
+  top: 30px;
+  left: 14px;
+  bottom: 0;
+}
+#interview-app .iv-stage-marker {
+  width: 29px;
+  height: 29px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--sl-line);
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--sl-bg);
+  z-index: 1;
+}
+#interview-app .iv-stage-marker svg {
+  width: 14px;
+  height: 14px;
+}
+#interview-app .iv-stage strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  padding-top: 2px;
+}
+#interview-app .iv-stage small {
+  display: block;
+  font-size: 10px;
+  margin-top: 4px;
+}
+#interview-app .iv-stage.is-current {
+  color: var(--sl-text);
+}
+#interview-app .iv-stage.is-current .iv-stage-marker {
+  color: var(--sl-accent);
+  background: var(--sl-soft);
+  border-color: #d9a28f;
+  box-shadow: 0 0 0 4px #f1e9dd;
+}
+#interview-app .iv-stage.is-done .iv-stage-marker {
+  border-color: #d4be82;
+  background: #f3edd9;
+  color: #8c6d1e;
+}
+#interview-app .iv-aside-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding-top: 18px;
+  border-top: 1px solid var(--sl-line);
+  color: var(--sl-sub);
+  font-size: 11px;
+  line-height: 1.7;
+}
+#interview-app .iv-aside-note svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+}
+#interview-app .iv-earlier {
+  margin-top: 20px;
+  border: 1px solid var(--sl-line);
+  border-radius: 12px;
+  background: #ffffff80;
+}
+#interview-app .iv-earlier summary {
+  padding: 15px 18px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--sl-sub);
+}
+#interview-app .iv-earlier summary span {
+  float: right;
+}
+#interview-app .iv-past-turn {
+  padding: 16px 18px;
+  border-top: 1px solid var(--sl-line);
+}
+#interview-app .iv-past-turn h3 {
+  margin-bottom: 9px;
+  font-size: 12px;
+}
+#interview-app .iv-answer-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.75;
+  font-size: 13px;
+}
+#interview-app .iv-review-overview {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 21px 24px;
+  margin-bottom: 30px;
+  border: 1px solid var(--sl-line);
+  border-radius: 14px;
+  background: white;
+}
+#interview-app .iv-review-overview > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--sl-sub);
+}
+#interview-app .iv-review-overview svg {
+  width: 17px;
+  height: 17px;
+  color: var(--sl-accent);
+}
+#interview-app .iv-review-overview strong {
+  color: var(--sl-text);
+  font-size: 18px;
+  font-weight: 500;
+}
+#interview-app .iv-review-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  margin-left: auto;
+  color: var(--sl-sub);
+}
+#interview-app .iv-review-note svg {
+  color: #9a7e30;
+}
+#interview-app .iv-review-card {
+  background: white;
+  border: 1px solid var(--sl-line);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+#interview-app .iv-review-card > summary {
+  cursor: pointer;
+  padding: 18px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+#interview-app .iv-review-body {
+  padding: 0 20px 20px;
+}
+#interview-app .iv-answer-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 9px;
+  font-size: 10px;
+  color: var(--sl-sub);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+#interview-app .iv-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+#interview-app .iv-compare > div:last-child {
+  background: #faf6ee;
+  border-radius: 9px;
+  padding: 13px;
+}
+#interview-app .iv-review-body > .iv-text-button {
+  margin-top: 14px;
+}
+#interview-app .iv-revision-editor {
+  margin-top: 15px;
+}
+#interview-app .iv-revision-editor textarea {
+  min-height: 130px;
+}
+#interview-app .iv-revision-editor .iv-answer-actions {
+  justify-content: flex-end;
+}
+#interview-app .iv-review-aside {
+  border: 1px solid var(--sl-line);
+  border-radius: 14px;
+  padding: 20px;
+  background: #efede5;
+}
+#interview-app #iv-checklist {
+  display: grid;
+  gap: 14px;
+  margin: 22px 0;
+}
+#interview-app .iv-check {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.65;
+  cursor: pointer;
+}
+#interview-app input[type='checkbox'] {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  margin-top: 3px;
+  accent-color: var(--sl-accent);
+}
+#interview-app .iv-reflection-label {
+  display: block;
+  padding-top: 18px;
+  margin-bottom: 9px;
+  border-top: 1px solid #ded9cc;
+  font-size: 12px;
+}
+#interview-app #iv-reflection {
+  min-height: 105px;
+  font-size: 12px;
+  padding: 11px;
+  background: #faf9f5;
+}
+#interview-app .iv-review-aside > .iv-button {
+  width: 100%;
+  margin-top: 12px;
+}
+#interview-app .iv-review-aside > .iv-secondary {
+  margin-top: 20px;
+}
+#interview-app .iv-announcement {
+  margin-top: 18px;
+  min-height: 20px;
+  font-size: 12px;
+  color: var(--sl-sub);
+}
+#interview-app dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  border: 1px solid var(--sl-line);
+  border-radius: 18px;
+  color: var(--sl-text);
+  background: var(--sl-bg);
+  padding: 26px;
+  box-sizing: border-box;
+  box-shadow: 0 24px 90px #1c1b1933;
+}
+#interview-app dialog::backdrop {
+  background: #22232666;
+  backdrop-filter: blur(3px);
+}
+#interview-app .iv-settings-form > label {
+  display: block;
+  font-size: 12px;
+  margin: 20px 0 7px;
+}
+#interview-app .iv-settings-form > label span {
+  display: block;
+  font-size: 10px;
+  margin-top: 3px;
+}
+#interview-app .iv-settings-form > input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--sl-line);
+  border-radius: 8px;
+  background: white;
+}
+#interview-app .iv-settings-form textarea {
+  min-height: 78px;
+  font-size: 12px;
+}
+#interview-app .iv-settings-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-top: 24px;
+}
+#interview-app .iv-icon-button {
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+  padding: 8px;
+  color: var(--sl-sub);
+}
+@keyframes iv-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 1100px) {
+  #skillloop-prototype .sl-main {
+    padding: 26px;
+  }
+  #interview-app .iv-conversation-art {
+    width: 190px;
+  }
+  #interview-app .iv-practice-layout,
+  #interview-app .iv-review-layout {
+    grid-template-columns: minmax(0, 1fr) 210px;
+    gap: 18px;
+  }
+  #interview-app .iv-question-card {
+    padding: 22px;
+  }
+  #interview-app .iv-review-overview {
+    gap: 18px;
+  }
+  #interview-app .iv-review-note {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  #interview-app .iv-conversation-art {
+    display: none;
+  }
+  #interview-app .iv-practice-layout,
+  #interview-app .iv-review-layout {
+    grid-template-columns: 1fr;
+  }
+  #interview-app .iv-session-aside {
+    grid-row: 1;
+    padding: 0;
+  }
+  #interview-app .iv-session-aside > :not(#iv-progress) {
+    display: none;
+  }
+  #interview-app #iv-progress {
+    display: flex;
+    margin: 0 0 6px;
+    justify-content: space-between;
+  }
+  #interview-app .iv-stage {
+    min-height: auto;
+    flex: 1;
+    padding: 0;
+    gap: 9px;
+  }
+  #interview-app .iv-stage:not(:last-child)::after {
+    height: 1px;
+    top: 14px;
+    left: 37px;
+    right: 8px;
+    width: auto;
+  }
+  #interview-app .iv-stage > div {
+    background: var(--sl-bg);
+    z-index: 1;
+    padding-right: 8px;
+  }
+  #interview-app .iv-stage small {
+    display: none;
+  }
+  #interview-app .iv-review-aside {
+    grid-row: 1;
+  }
+  #interview-app #iv-checklist {
+    margin: 18px 0;
+  }
+}
+@media (max-width: 520px) {
+  #skillloop-prototype .sl-main {
+    padding: 22px 18px 30px;
+  }
+  #interview-app .iv-toolbar {
+    margin-bottom: 32px;
+    gap: 7px;
+  }
+  #interview-app .iv-mode {
+    font-size: 10px;
+    padding: 4px 7px;
+  }
+  #interview-app .iv-breadcrumb {
+    gap: 6px;
+    font-size: 11px;
+  }
+  #interview-app .iv-welcome {
+    margin-bottom: 30px;
+  }
+  #interview-app h1 {
+    font-size: 34px;
+    max-width: 310px;
+  }
+  #interview-app .iv-welcome-copy {
+    font-size: 12px;
+  }
+  #interview-app .iv-section-heading h2 {
+    font-size: 15px;
+  }
+  #interview-app .iv-topics {
+    gap: 8px;
+  }
+  #interview-app .iv-topic {
+    min-height: 110px;
+    padding: 13px 10px;
+    gap: 12px;
+  }
+  #interview-app .iv-topic-title {
+    font-size: 11px;
+  }
+  #interview-app .iv-topic-description {
+    display: none;
+  }
+  #interview-app .iv-topic-check {
+    right: 8px;
+    top: 9px;
+    width: 12px;
+  }
+  #interview-app .iv-topic-icon {
+    width: 31px;
+    height: 31px;
+  }
+  #interview-app .iv-launch {
+    grid-template-columns: 1fr;
+    padding: 21px;
+    gap: 22px;
+  }
+  #interview-app .iv-launch h2 {
+    font-size: 23px;
+  }
+  #interview-app .iv-launch-action {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    align-items: center;
+  }
+  #interview-app .iv-launch-action label {
+    grid-column: 1 / -1;
+  }
+  #interview-app .iv-launch-action > .iv-text-button {
+    grid-column: 1 / -1;
+  }
+  #interview-app select,
+  #interview-app textarea,
+  #interview-app input {
+    font-size: 16px;
+  }
+  #interview-app .iv-launch-action select {
+    min-width: 0;
+    font-size: 12px;
+  }
+  #interview-app .iv-button {
+    padding: 11px 12px;
+  }
+  #interview-app .iv-history {
+    margin-top: 30px;
+  }
+  #interview-app .iv-history .iv-section-heading {
+    align-items: flex-start;
+    gap: 8px;
+  }
+  #interview-app .iv-history .iv-section-heading > span {
+    max-width: 120px;
+    text-align: right;
+    font-size: 10px;
+  }
+  #interview-app .iv-session-heading h1 {
+    font-size: 26px;
+  }
+  #interview-app .iv-session-heading {
+    gap: 10px;
+  }
+  #interview-app .iv-session-heading > button {
+    font-size: 11px;
+  }
+  #interview-app .iv-stage strong {
+    font-size: 10px;
+  }
+  #interview-app .iv-stage {
+    gap: 7px;
+  }
+  #interview-app .iv-question-card {
+    padding: 19px;
+  }
+  #interview-app .iv-move {
+    font-size: 11px;
+  }
+  #interview-app .iv-editor-status {
+    font-size: 9px;
+  }
+  #interview-app .iv-review-overview {
+    padding: 17px 14px;
+    gap: 15px;
+  }
+  #interview-app .iv-review-overview > div {
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  #interview-app .iv-review-overview > div > span {
+    width: 100%;
+  }
+  #interview-app .iv-compare {
+    grid-template-columns: 1fr;
+  }
+  #interview-app .iv-review-card > summary {
+    padding: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #interview-app *,
+  #interview-app *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
