@@ -48,7 +48,7 @@
     $('#iv-mode').textContent = live ? 'Live AI' : 'Demo conversation';
     $('#iv-mode').classList.toggle('is-live', live);
     $('#iv-room-note').textContent = live
-      ? 'AI adapts to your replies. Choose one, or use your own words.'
+      ? 'Type your reply. Reply ideas can help you get started.'
       : 'Scripted demo · live AI is not connected.';
     $('#iv-save-status').textContent = storage
       ? 'Saved in this browser'
@@ -56,7 +56,8 @@
   }
   function setBusy(value, label) {
     busy = value;
-    for (const item of document.querySelectorAll('#interview-app button')) item.disabled = value;
+    for (const item of document.querySelectorAll('#interview-app :is(button, textarea, select)'))
+      item.disabled = value;
     $('#iv-thinking').hidden = !value;
     $('#iv-scene').setAttribute('aria-busy', String(value));
     if (label) announce(label);
@@ -196,11 +197,19 @@
         button(
           choice,
           () => {
-            session.draft = choice;
+            const combined = session.draft.trim()
+              ? session.draft.trimEnd() + '\n' + choice
+              : choice;
+            if (combined.length > 1500) {
+              $('#iv-ideas-status').textContent =
+                'This idea would exceed 1,500 characters. Shorten your reply first.';
+              return;
+            }
+            session.draft = combined;
             session.draftIdea = { index, text: choice };
             session.updatedAt = new Date().toISOString();
             save();
-            $('#iv-answer').value = choice;
+            $('#iv-answer').value = combined;
             $('#iv-ideas').close();
             $('#iv-answer').focus();
             $('#iv-answer').setCustomValidity('');
@@ -334,6 +343,8 @@
         session.review = result;
         session.updatedAt = new Date().toISOString();
         save();
+        select.value = String(result.highlights.find((item) => item.kind === 'improve')?.turn || 0);
+        renderEditor();
       } catch (error) {
         $('#iv-review-summary').textContent = error.message;
         $('#iv-review-retry').hidden = false;
@@ -380,7 +391,7 @@
     const index = Number($('#iv-improve-select').value);
     const turn = session.turns[index];
     const draft = session.revisionDrafts[index];
-    assisted = draft?.assisted || false;
+    assisted = draft?.assisted ?? turn.revisions.at(-1)?.assisted ?? false;
     $('#iv-original').textContent = 'You said: ' + turn.answer;
     $('#iv-revision').value = draft?.text ?? turn.revisions.at(-1)?.text ?? turn.answer;
     $('#iv-suggestion').hidden = true;
@@ -539,7 +550,10 @@
     save();
     location.href = '../index.html';
   });
-  $('#iv-home').addEventListener('click', () => home(false));
+  $('#iv-home').addEventListener('click', () => {
+    save();
+    location.href = '../index.html';
+  });
   $('#iv-again').addEventListener('click', () => $('#iv-scenarios').showModal());
   $('#iv-scenario-open').addEventListener('click', () => $('#iv-scenarios').showModal());
   $('#iv-scenarios-close').addEventListener('click', () => $('#iv-scenarios').close());
@@ -550,6 +564,7 @@
   $('#iv-retry').addEventListener('click', () => retryAction?.());
   $('#iv-review-retry').addEventListener('click', review);
   $('#iv-own-answer').addEventListener('click', () => {
+    $('#iv-ideas-status').textContent = '';
     $('#iv-ideas').showModal();
     app.icons();
   });

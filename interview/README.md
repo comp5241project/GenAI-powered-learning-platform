@@ -1,6 +1,6 @@
 # Interview room — module 3
 
-A course-linked mock interview inside the normal SkillLoop workspace. Opening the page starts or resumes the conversation. Maya asks one question at a time; the input box is always visible. Reply ideas add a short starter to that box and never submit an answer.
+A course-linked mock interview inside the normal SkillLoop workspace. Opening the page starts or resumes the conversation. Maya asks one question at a time; the input box is always visible. Reply ideas add a short starter without replacing existing text or submitting an answer. Done ends the review and returns to SkillLoop; starting another conversation is a separate action.
 
 After each reply, the AI returns a brief observation, one suggestion and a follow-up based on the actual answer. A conversation ends after three to five replies. The final review links feedback to exact answer quotes, offers a possible rewrite, and compares a saved revision with the original. No hiring score or mastery claim is generated.
 

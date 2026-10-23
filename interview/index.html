@@ -208,9 +208,6 @@
                   <h1 id="iv-review-title" tabindex="-1">One step better.</h1>
                   <p id="iv-review-summary"></p>
                 </div>
-                <button id="iv-home" type="button" class="iv-text-button">
-                  Back to room <i data-lucide="arrow-up-right" aria-hidden="true"></i>
-                </button>
               </header>
               <div class="iv-review-layout">
                 <div>
@@ -266,8 +263,10 @@
               <div class="iv-review-actions">
                 <button id="iv-export" class="iv-text-button" type="button">
                   <i data-lucide="download" aria-hidden="true"></i>Download record</button
-                ><button id="iv-again" class="iv-button iv-primary" type="button">
-                  Another conversation <i data-lucide="arrow-right" aria-hidden="true"></i>
+                ><button id="iv-again" class="iv-button iv-secondary" type="button">
+                  Another conversation <i data-lucide="arrow-right" aria-hidden="true"></i></button
+                ><button id="iv-home" type="button" class="iv-button iv-primary">
+                  Done <i data-lucide="check" aria-hidden="true"></i>
                 </button>
               </div>
               <p id="iv-review-source" class="iv-room-note"></p>
@@ -325,6 +324,7 @@
                 Add an idea to the input box, then make it your own. Nothing is sent yet.
               </p>
               <div id="iv-choices" class="iv-choices"></div>
+              <p id="iv-ideas-status" class="iv-small" role="status"></p>
             </dialog>
             <dialog id="iv-scenarios" aria-labelledby="iv-scenarios-title">
               <div class="iv-section-heading">
