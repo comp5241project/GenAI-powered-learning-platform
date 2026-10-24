@@ -140,20 +140,17 @@
                     <path d="M275 337q18 32 1 58l-19 7" stroke="#3b4135" stroke-width="2.5" />
                   </svg>
                   <div class="iv-person-label">
-                    <span class="iv-person-dot"></span><strong>Maya</strong
-                    ><span>Engineering interviewer</span>
+                    <span class="iv-person-dot"></span><strong>Maya</strong>
                   </div>
                 </div>
                 <div class="iv-conversation">
                   <div class="iv-conversation-top">
-                    <span id="iv-stage">Meet your interviewer</span
-                    ><button id="iv-exit" class="iv-text-button" type="button" hidden>
+                    <button id="iv-exit" class="iv-text-button" type="button" hidden>
                       Save & leave <i data-lucide="log-out" aria-hidden="true"></i>
                     </button>
                   </div>
                   <p id="iv-last-answer" class="iv-last-answer" hidden></p>
                   <div class="iv-dialogue" aria-live="polite" aria-atomic="true">
-                    <p class="iv-speaker">MAYA</p>
                     <p id="iv-ack" class="iv-ack"></p>
                     <div id="iv-feedback" class="iv-turn-feedback iv-ai-block" hidden>
                       <div class="iv-source-label">
@@ -166,7 +163,7 @@
                       <p id="iv-feedback-observation"></p>
                       <p id="iv-feedback-suggestion"></p>
                     </div>
-                    <h1 id="iv-question" tabindex="-1">Take a seat. We'll begin in a moment.</h1>
+                    <h1 id="iv-question" tabindex="-1">Preparing your question…</h1>
                     <div id="iv-thinking" class="iv-thinking" hidden>
                       <span></span><span></span><span></span
                       ><span class="iv-sr-only">Maya is thinking</span>
@@ -174,12 +171,12 @@
                   </div>
                   <div class="iv-response-area">
                     <form id="iv-compose">
-                      <label for="iv-answer">Your reply</label>
+                      <label for="iv-answer" class="iv-sr-only">Your reply</label>
                       <textarea
                         id="iv-answer"
                         rows="3"
                         maxlength="1500"
-                        placeholder="What would you do, and why?"
+                        placeholder="Your answer…"
                       ></textarea>
                       <div class="iv-compose-actions">
                         <button id="iv-own-answer" type="button" class="iv-text-button">
@@ -196,11 +193,10 @@
                       </button>
                     </div>
                   </div>
-                  <p id="iv-room-note" class="iv-room-note">Type a reply, or start with a hint.</p>
                 </div>
               </div>
               <div class="iv-room-footer">
-                <span id="iv-save-status">Saved on this device</span
+                <span id="iv-save-status" hidden></span
                 ><button id="iv-log-open" class="iv-text-button" type="button" hidden>
                   <i data-lucide="notebook-text" aria-hidden="true"></i>Conversation log
                 </button>
@@ -327,7 +323,7 @@
                   <i data-lucide="x" aria-hidden="true"></i>
                 </button>
               </div>
-              <p class="iv-small">Adds to your draft. You choose when to send.</p>
+              <p class="iv-small">Choose a starting point to edit.</p>
               <div id="iv-choices" class="iv-choices"></div>
               <p id="iv-ideas-status" class="iv-small" role="status"></p>
             </dialog>
@@ -343,7 +339,6 @@
                   <i data-lucide="x" aria-hidden="true"></i>
                 </button>
               </div>
-              <p class="iv-small">Current interview saved in History.</p>
               <div id="iv-scenario-list" class="iv-choices"></div>
             </dialog>
           </div>

@@ -57,14 +57,10 @@
   }
   function mode() {
     const live = session ? session.mode === 'ai' : available;
-    $('#iv-mode').textContent = live ? 'Live AI' : 'Demo conversation';
+    $('#iv-mode').textContent = live ? 'Live AI' : 'Demo';
     $('#iv-mode').classList.toggle('is-live', live);
-    $('#iv-room-note').textContent = live
-      ? 'Type a reply, or start with a hint.'
-      : 'Demo · preset questions.';
-    $('#iv-save-status').textContent = storage
-      ? 'Saved in this browser'
-      : 'Saved for this visit only';
+    $('#iv-save-status').hidden = storage;
+    $('#iv-save-status').textContent = storage ? '' : 'Saved for this visit only';
   }
   function setBusy(value, label) {
     busy = value;
@@ -183,13 +179,6 @@
     $('#iv-error').hidden = true;
     $('#iv-exit').hidden = false;
     $('#iv-log-open').hidden = !session.turns.length;
-    $('#iv-stage').textContent = [
-      "Let's begin",
-      'A closer look',
-      'A new angle',
-      'Your decision',
-      'One last question',
-    ][session.turns.length];
     $('#iv-ack').textContent = turn.acknowledgement;
     $('#iv-feedback').hidden = !turn.feedback?.observation;
     $('#iv-feedback').classList.toggle('is-sample', session.mode !== 'ai');
@@ -250,7 +239,7 @@
     $('#iv-ack').textContent = '';
     $('#iv-question').textContent = session.turns.length
       ? 'Let me think about that…'
-      : 'Let’s get comfortable.';
+      : 'Preparing your question…';
     $('#iv-error').hidden = true;
     $('#iv-exit').hidden = false;
     $('#iv-log-open').hidden = !session.turns.length;
@@ -270,7 +259,7 @@
     } catch (error) {
       setBusy(false);
       $('#iv-thinking').hidden = true;
-      $('#iv-question').textContent = 'We can pick up right here.';
+      $('#iv-question').textContent = 'Couldn’t load the next question.';
       $('#iv-error-text').textContent = error.message;
       $('#iv-error').hidden = false;
       retryAction = next;
@@ -324,16 +313,15 @@
   }
   async function review() {
     $('#iv-error').hidden = true;
+    $('#iv-review-summary').hidden = false;
     $('#iv-review-summary').textContent = session.review?.summary || 'Preparing your review…';
     $('#iv-highlights').replaceChildren();
     $('#iv-next-practice').textContent = '';
     $('#iv-review-retry').hidden = true;
     $('#iv-feedback-title').textContent = 'AI review';
     $('#iv-review-feedback').classList.toggle('is-sample', session.mode !== 'ai');
-    $('#iv-review-source').textContent =
-      session.mode === 'ai'
-        ? 'AI feedback · Original answers kept.'
-        : '(Sample — API not connected yet)';
+    $('#iv-review-source').hidden = session.mode === 'ai';
+    $('#iv-review-source').textContent = '(Sample — API not connected yet)';
     $('#iv-lesson').href =
       legacyModel.safeReturnPath(session.context.returnTo) ||
       '../knowledge-map/?topic=' + encodeURIComponent(session.context.conceptId);
@@ -373,6 +361,7 @@
   }
   function renderFeedback() {
     if (!session.review) return;
+    $('#iv-review-summary').hidden = session.mode !== 'ai';
     $('#iv-review-summary').textContent = session.review.summary;
     $('#iv-next-practice').textContent = session.review.nextStep;
     const target = $('#iv-highlights');
@@ -412,6 +401,7 @@
     $('#iv-revision').value = draft?.text ?? turn.revisions.at(-1)?.text ?? turn.answer;
     $('#iv-suggestion').hidden = true;
     $('#iv-suggestion').replaceChildren();
+    $('#iv-suggest').hidden = false;
     $('#iv-improve-status').textContent = '';
     $('#iv-suggest').replaceChildren(icon('sparkles'), document.createTextNode('AI rewrite'));
     $('#iv-compare').hidden = !turn.revisions.length || session.mode !== 'ai';
@@ -424,6 +414,7 @@
     const target = $('#iv-suggestion');
     sourceBlock(target, 'AI rewrite');
     target.hidden = false;
+    $('#iv-suggest').hidden = true;
     const reason = node('details', 'iv-why');
     reason.append(node('summary', '', 'Why'), node('p', '', result.reason));
     target.append(
@@ -435,6 +426,8 @@
           $('#iv-revision').value = result.suggestion;
           assisted = true;
           saveRevisionDraft();
+          target.hidden = true;
+          $('#iv-suggest').hidden = false;
           $('#iv-revision').focus();
         },
         'iv-text-button',
@@ -454,7 +447,7 @@
           ? await ask('rewrite', index)
           : {
               suggestion: story.topic(session.topicId).example,
-              reason: 'Sample only. Add your own reasoning.',
+              reason: story.topic(session.topicId).nextStep,
             };
       session.suggestions[index] = result;
       save();
@@ -491,18 +484,11 @@
     }
   }
   function history() {
-    const finished = state.sessions.filter((s) => s.status === 'completed').length;
-    const revisions = state.sessions.reduce(
-      (total, s) => total + s.turns.filter((t) => t.revisions.length).length,
-      0
-    );
     $('#iv-history-summary').textContent = state.sessions.length
-      ? finished +
-        ' completed · ' +
-        revisions +
-        ' answers revisited · ' +
-        (storage ? 'this browser' : 'this visit only')
-      : 'Your next conversation will appear here.';
+      ? storage
+        ? 'Saved in this browser'
+        : 'Saved for this visit only'
+      : 'No interviews yet.';
     const list = $('#iv-history-list');
     list.replaceChildren();
     for (const record of [...state.sessions].sort((a, b) =>
@@ -625,9 +611,7 @@
         save();
         renderTranscript($('#iv-transcript'));
       }
-      $('#iv-improve-status').textContent = changed
-        ? 'Rewrite saved. Original kept.'
-        : 'No changes yet.';
+      $('#iv-improve-status').textContent = changed ? 'Rewrite saved' : 'No changes to save';
       $('#iv-compare').hidden = !session.turns[index].revisions.length || session.mode !== 'ai';
       $('#iv-comparison').hidden = true;
     } catch (error) {

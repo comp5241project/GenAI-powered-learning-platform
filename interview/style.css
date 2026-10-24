@@ -187,13 +187,6 @@
   padding-top: 18px;
   font-size: 13px;
 }
-#interview-app .iv-person-label > span:last-child {
-  display: block;
-  width: 100%;
-  text-align: center;
-  font-size: 11px;
-  color: #6f7162;
-}
 #interview-app .iv-person-dot {
   width: 5px;
   height: 5px;
@@ -213,10 +206,7 @@
 #interview-app .iv-conversation-top {
   min-height: 40px;
   margin-bottom: 18px;
-}
-#interview-app #iv-stage {
-  color: var(--sl-sub);
-  font-size: 11px;
+  justify-content: flex-end;
 }
 #interview-app .iv-dialogue {
   position: relative;
@@ -232,13 +222,6 @@
   top: 0;
   border-top: 12px solid #e8e2d5;
   border-left: 8px solid transparent;
-}
-#interview-app .iv-speaker {
-  font-size: 9px;
-  letter-spacing: 2px;
-  color: #747866;
-  margin: 0 0 12px;
-  font-weight: 600;
 }
 #interview-app .iv-ack {
   font-size: 12px;
@@ -304,16 +287,13 @@
   font-size: 11px;
   max-width: 92%;
 }
-#interview-app .iv-room-note {
-  color: #817b6e;
-  font-size: 10px;
-  margin: auto 0 0;
-  padding-top: 22px;
-}
 #interview-app .iv-room-footer {
   color: var(--sl-sub);
   font-size: 10px;
   padding: 9px 3px;
+}
+#interview-app #iv-log-open {
+  margin-left: auto;
 }
 #interview-app textarea,
 #interview-app select {
@@ -607,9 +587,6 @@
   #interview-app .iv-scene {
     grid-template-columns: 31% minmax(0, 1fr);
   }
-  #interview-app .iv-person-label > span:last-child {
-    max-width: 130px;
-  }
 }
 @media (max-width: 850px) {
   #interview-app .iv-scene {
@@ -637,11 +614,6 @@
   #interview-app .iv-person-label {
     display: block;
     padding: 0;
-  }
-  #interview-app .iv-person-label > span:last-child {
-    text-align: left;
-    max-width: none;
-    margin-top: 5px;
   }
   #interview-app .iv-person-dot {
     display: inline-block;
@@ -751,17 +723,8 @@
   color: #8c6143;
   margin-bottom: 0;
 }
-#interview-app #iv-compose > label {
-  display: block;
-  font-size: 11px;
-  color: var(--sl-sub);
-  margin-bottom: 10px;
-}
 #interview-app #iv-own-answer {
   margin-top: 0;
-}
-#interview-app .iv-room-note {
-  display: block;
 }
 #interview-app .iv-toolbar-actions {
   gap: 16px;

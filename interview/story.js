@@ -12,8 +12,7 @@
       icon: 'flask-conical',
       setting: 'You are reviewing a small feature before release.',
       goal: 'Connect requirements, test cases and release decisions.',
-      question:
-        'You are reviewing an AI-written average function. What would you check before approving the change?',
+      question: 'An AI-written average function is ready to merge. What would you check first?',
       choices: [
         "I'd first clarify what the function should do…",
         "I'd check whether the existing tests cover…",
@@ -316,7 +315,7 @@
     const n = session.turns.length;
     const feedback = n
       ? {
-          observation: 'A useful checkpoint here is to connect your decision to evidence.',
+          observation: 'Support your decision with an example.',
           suggestion: t.nextStep,
           quote: session.turns.at(-1).answer.slice(0, 100),
         }
@@ -324,7 +323,7 @@
     if (!n)
       return {
         done: false,
-        acknowledgement: "Hi, I'm Maya. I'll be your interviewer today. " + t.setting,
+        acknowledgement: t.id === 'testing' ? '' : t.setting,
         feedback,
         question: t.question,
         choices: [...t.choices],
