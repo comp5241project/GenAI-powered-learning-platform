@@ -54,7 +54,14 @@
 #skillloop-prototype #kn-selected { display:grid; gap:12px; justify-items:start; }
 #skillloop-prototype #kn-selected label { width:min(100%,700px); }
 #skillloop-prototype #kn-backlinks p { border-top:1px solid var(--sl-line); padding:10px 0; }
-#skillloop-prototype .kn-teacher-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(260px,360px); gap:16px; }
+#skillloop-prototype .kn-teacher-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(300px,380px); gap:16px; align-items:start; }
+#skillloop-prototype .kn-teacher-layout > * { min-width:0; }
+#skillloop-prototype .kn-concept-inspector { padding:16px; border:1px solid var(--sl-line); border-radius:10px; background:var(--sl-panel); }
+#skillloop-prototype .kn-concept-inspector h3 { margin-top:0; }
+#skillloop-prototype .kn-concept-inspector form[hidden], #skillloop-prototype .kn-concept-inspector section[hidden] { display:none; }
+#skillloop-prototype .kn-related { border-top:1px solid var(--sl-line); margin-top:16px; padding-top:12px; }
+#skillloop-prototype #teacher-related-links { display:flex; flex-wrap:wrap; gap:8px; }
+#skillloop-prototype #teacher-review #teacher-meta { display:grid; gap:8px; max-width:650px; }
 #skillloop-prototype .sl-card form.kn-teacher-form { display:grid; gap:8px; }
 #skillloop-prototype .kn-teacher-form label { display:grid; gap:5px; }
 #skillloop-prototype .kn-teacher-form input, #skillloop-prototype .kn-teacher-form textarea, #skillloop-prototype .kn-teacher-form select { width:100%; }

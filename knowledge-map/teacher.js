@@ -103,22 +103,38 @@
       if (query && !`${topic.title} ${topic.description}`.toLowerCase().includes(query)) continue;
       const button = K.make('button', 'kn-list-button', `${topic.title}${topic.archived ? ' (archived)' : ''}`);
       button.type = 'button';
-      button.addEventListener('click', () => { selectTopic(topic.id); if (!topic.archived) canvas.focus(topic.id); });
+      button.addEventListener('click', () => { if (topic.archived) selectTopic(topic.id); else canvas.focus(topic.id); });
       list.append(button);
     }
     for (const selector of ['#teacher-relation [name=source]', '#teacher-relation [name=target]',
       '#teacher-question [name=topicId]']) optionList(selector);
-    renderRelations(); renderQuestions(); renderCases();
+    renderRelations(); renderQuestions(); renderCases(); renderRelated();
+  }
+  function renderRelated() {
+    const panel = $('#teacher-related');
+    panel.hidden = !selectedId || !draft;
+    const box = $('#teacher-related-links'); box.replaceChildren();
+    if (panel.hidden) return;
+    const counts = window.SkillLoopStudioUI.relatedCounts(draft, selectedId);
+    for (const [view, label] of [['relationships', 'Relationships'], ['questions', 'Questions'], ['cases', 'Cases']]) {
+      const button = K.make('button', 'kn-list-button', `${label} (${counts[view]})`);
+      button.type = 'button';
+      button.addEventListener('click', () => showTask(view, selectedId));
+      box.append(button);
+    }
   }
   function selectTopic(id) {
     selectedId = id;
     const topic = draft?.topics.find((item) => item.id === id);
     const form = $('#teacher-topic');
-    if (!topic) return;
+    form.hidden = !topic;
+    $('#teacher-topic-empty').hidden = !!topic;
+    if (!topic) { renderRelated(); return; }
     for (const name of ['id', 'title', 'description']) form.elements[name].value = topic[name];
     for (const name of ['goal', 'explanation', 'example', 'nextAction']) form.elements[name].value = topic.lesson[name];
     $('#teacher-topic-preserved').textContent = `Preserved path fields · role: ${topic.pathRole}; order: ${topic.order}; icon: ${topic.icon}. These fields are kept unchanged when other fields are saved.`;
     form.elements.archived.checked = !!topic.archived;
+    renderRelated();
   }
   function selectRelation(relation) {
     const form = $('#teacher-relation');
@@ -146,6 +162,7 @@
         changed(); renderGraph(); });
       row.append(edit, button); box.append(row);
     }
+    renderRelated();
   }
   function renderQuestions() {
     const box = $('#teacher-questions'); box.replaceChildren();
@@ -168,6 +185,7 @@
       archive.addEventListener('click', () => { question.archived = !question.archived; changed(); renderQuestions(); });
       row.append(edit, archive); box.append(row);
     }
+    renderRelated();
   }
   function renderCases() {
     const box = $('#teacher-cases'); box.replaceChildren();
@@ -190,6 +208,7 @@
       archive.addEventListener('click', () => { item.archived = !item.archived; changed(); renderCases(); });
       row.append(edit, archive); box.append(row);
     }
+    renderRelated();
   }
   function caseFormChanged() { staged($('#teacher-case')); }
   function caseOption(select, value, label) {
@@ -282,7 +301,7 @@
     }
     $('#teacher-relation-cancel').hidden = true;
     $('#teacher-question-cancel').hidden = true;
-    selectedId = draft.topics[0]?.id || null;
+    selectedId = null;
     dirty = false; pendingForms.clear(); editSequence += 1; $('#teacher-reviewed').checked = false;
     $('#teacher-frame').hidden = true;
     sessionStorage.removeItem('skillloop.knowledge.preview');
@@ -290,7 +309,7 @@
     form.elements.title.value = draft.publication.title;
     form.elements.version.value = draft.publication.version;
     form.elements.date.value = draft.publication.publishedAt;
-    renderGraph(); selectTopic(selectedId); controls();
+    renderGraph(); selectTopic(null); controls();
     fillCaseArrays([{ kind: 'source-supported', text: '', sourceSection: '' },
       { kind: 'teaching-inference', text: '' }], [{ topicId: draft.topics[0]?.id || '', kind: 'application', reason: '' }]);
     $('#teacher-case-cancel').hidden = true;
