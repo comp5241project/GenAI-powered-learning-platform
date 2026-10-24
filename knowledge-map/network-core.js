@@ -29,6 +29,8 @@
     if (!response.ok) {
       const error = new Error(data.error || `Request failed (${response.status}).`);
       error.status = response.status;
+      if (response.status === 401 && op !== 'login' && op !== 'session')
+        document.dispatchEvent(new CustomEvent('knowledge-auth-expired'));
       throw error;
     }
     return data;
@@ -36,9 +38,12 @@
   async function loadGraph() {
     if (!safeId(graphId)) throw new Error('Invalid graph link.');
     if (params.get('draftPreview') === '1') {
+      // The browser snapshot is usable only while this account owns the draft.
+      const authorized = await api('draft', 'GET', undefined, { graph: graphId });
+      if (!authorized.draft) throw new Error('Private draft preview is unavailable to this account.');
       const raw = sessionStorage.getItem('skillloop.knowledge.preview');
       const preview = raw && JSON.parse(raw);
-      if (!preview || preview.publication?.id !== graphId) throw new Error('Preview is unavailable in this tab.');
+      if (!preview || preview.publication?.id !== graphId) throw new Error('Private draft preview is unavailable in this tab.');
       return { graph: preview, preview: true };
     }
     try {
@@ -53,32 +58,6 @@
         return { graph: window.SkillLoopGraph, preview: false, sample: true };
       throw error;
     }
-  }
-  const legacy = () => window.SkillLoop.read('knowledge', { selected: null, completed: [], references: [] });
-  function local() {
-    const old = legacy();
-    const references = Array.isArray(old.references) ? old.references : [];
-    const migrated = references.filter((ref) => ref && safeId(ref.id)).map((ref, index) => ({
-      id: `${sampleId}:${ref.id}`, kind: 'reference', graphId: sampleId, conceptId: ref.id,
-      sourceVersion: ref.version || 'unknown', titleSnapshot: ref.title || ref.id,
-      descriptionSnapshot: ref.description || '', note: ref.note || '',
-      x: 90 + index % 4 * 220, y: 80 + Math.floor(index / 4) * 130,
-    }));
-    const data = window.SkillLoop.read('knowledgeV2', { nodes: migrated, edges: [] });
-    data.nodes = Array.isArray(data.nodes) ? data.nodes : [];
-    data.edges = Array.isArray(data.edges) ? data.edges : [];
-    return data;
-  }
-  function saveLocal(data) { return window.SkillLoop.write('knowledgeV2', data); }
-  function referenceNode(graph, topic, data) {
-    const id = `${graph.publication.id}:${topic.id}`;
-    if (data.nodes.some((node) => node.id === id)) return false;
-    data.nodes.push({ id, kind: 'reference', graphId: graph.publication.id, conceptId: topic.id,
-      sourceVersion: graph.publication.version, titleSnapshot: topic.title,
-      descriptionSnapshot: topic.description, note: '', x: 80 + data.nodes.length % 4 * 220,
-      y: 80 + Math.floor(data.nodes.length / 4) * 130 });
-    saveLocal(data);
-    return true;
   }
   function position(item, index) {
     if (Number.isFinite(item.x) && Number.isFinite(item.y)) return { x: item.x, y: item.y };
@@ -238,6 +217,5 @@
       this.edgeLayer.replaceChildren(targets);
     }
   }
-  window.KnowledgeNetwork = { $, make, api, href, graphId, sampleId, safeId, loadGraph, local, saveLocal,
-    referenceNode, Canvas, legacy };
+  window.KnowledgeNetwork = { $, make, api, href, graphId, sampleId, safeId, loadGraph, Canvas };
 })();

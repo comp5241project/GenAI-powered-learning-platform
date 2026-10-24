@@ -16,14 +16,14 @@ After connecting the repository, Vercel can deploy new main commits and provide 
 
 ## Check the deployment
 
-- Open all four module URLs directly and refresh them. For knowledge-map, also check the personal entry, the sample `graph.html?graph=software-development` link and direct concept, question and case URLs. The sample works before Supabase is configured; teacher editing and account sign-in need the backend variables and appropriate accounts.
+- Open all four module URLs directly and refresh them. For knowledge-map, also check the public Knowledge Home and account-gated My Knowledge page, the sample `graph.html?graph=software-development` link and direct concept, question and case URLs. The sample works before Supabase is configured; teacher editing and account sign-in need the backend variables and appropriate accounts.
 - Use the sidebar and the brand link back to the home page.
 - Create a learning path and follow one of its lesson links.
 - Save and revise an interview answer; refresh and check the replay.
 - Enter a correction and reveal its reference explanation.
 - Check at a phone width.
 
-Study progress and browser personal-network records are stored on each browser origin. Localhost progress will not automatically appear on the Vercel domain. Account nodes and links sync only when both knowledge migrations and the backend are configured; importing browser records requires an explicit student action.
+Knowledge personal records are stored only in the account backend. Old browser Knowledge records are left untouched but current pages do not read, write or import them. Study-mark editing is paused. Account nodes and links require the Knowledge migrations and backend configuration.
 
 ## If deployment fails
 

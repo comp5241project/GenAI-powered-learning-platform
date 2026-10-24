@@ -9,7 +9,7 @@ The knowledge module can run as a static sample with `python -m http.server 8000
 - `supabase/migrations/20261021000100_knowledge_backend.sql` is the original schema. `20261021000200_knowledge_network_v2.sql` adds personal note nodes, manual links, positions, version-aware references and explicit transactional import. Apply both in order; do not edit the first migration.
 - A graph has one owner, a private draft revision and an immutable publication row for each version. The graph's `current_version` changes only after the new publication row is written in the same database transaction. Different teachers can own multiple graphs.
 - `knowledge-map/teacher.html` is a visual editor with forms, drag positions and cross-page previews. Its local preview is not a publication. A teacher saves and reviews the exact draft before publishing. AI search results are private research notes until a teacher writes and checks a sourced case.
-- Signed-in references, note nodes and manual links are per account. Browser-local nodes and study marks are separate. Import runs only after a student clicks the explicit import control.
+- Signed-in references, note nodes and manual links are per account. Knowledge pages no longer create browser-local personal nodes or study marks. The old import API remains for compatibility but has no UI caller.
 
 ## Provisioning
 
@@ -24,7 +24,7 @@ The knowledge module can run as a static sample with `python -m http.server 8000
 
    Accounts without a `skillloop_roles` row have learner access. Only graph owners can update their own drafts and publish them. Assign a different owner only through a deliberate database migration.
 3. In Vercel, keep the existing **Other** project preset and repository root. Use the root [`.env.example`](../.env.example) as a list of variable names; it contains no credentials and is not loaded automatically. Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` for account sign-in and teacher publishing. `OPENAI_API_KEY` is needed only for AI source discovery; `OPENAI_MODEL` is optional and defaults to `gpt-5.1`. Scope values to the intended environments and redeploy after setting them. For local `vercel dev`, put real values in an ignored `.env.local` file or use `vercel env pull`; never commit credentials.
-4. Open `/knowledge-map/teacher.html`, sign in as a teacher and create an owned graph. Save the draft, preview graph, knowledge, question and case pages, check source material and answers, then publish. Share the generated `/knowledge-map/graph.html?graph=<graphId>` link. The sample graph works statically until its owner publishes it; `/knowledge-map/` is the student's personal network.
+4. Open `/knowledge-map/teacher.html`, sign in as a teacher and create an owned graph. Save the draft, preview graph, knowledge, question and case pages, check source material and answers, then publish. Share the generated `/knowledge-map/graph.html?graph=<graphId>` link. The sample graph works statically until its owner publishes it; `/knowledge-map/` is the public Knowledge Home; `/knowledge-map/my.html` is the student account network.
 
 For a local full-stack preview, use `vercel dev` after linking a Vercel project and supplying local environment variables through Vercel's normal environment workflow. A Python static server only exercises the fallback; it cannot run `/api/knowledge`.
 
@@ -37,8 +37,8 @@ The API limits each teacher to ten searches per UTC day as a basic cost guard.
 
 ## Privacy and migration
 
-Account references, note nodes and manual links are visible only to their owner through row-level policies or owner-checked RPCs. Notes are limited to 1,000 characters. Browser-local records remain on the device after sign-in; account view shows only server records. Explicit import uses graph/concept keys and note UUIDs to deduplicate; unavailable or unpublished source versions reject the transaction. The local copy remains in the browser. A teacher can access only their own draft and discovery records. Published graph versions are public.
+Account references, note nodes and manual links are visible only to their owner through row-level policies or owner-checked RPCs. Notes are limited to 1,000 characters. Browser-local records remain on the device after sign-in; account view shows only server records. The retained import API requires authentication and its database function scopes writes to the current account. Existing browser records are left untouched; the current UI has no import flow. A teacher can access only their own draft and discovery records. Published graph versions are public.
 
 ## Verification
 
-Run `node --test api/*.test.mjs` and `python scripts/check_site.py`. The tests use mocked Supabase calls; they do not prove that a live project has the migrations, keys or role assignments configured. After provisioning, verify teacher ownership across two accounts, draft isolation, publish, historical URLs, explicit import, duplicate references, personal edges and notes across devices, and phone layout on a preview deployment before pointing learners to it.
+Run `node --test api/*.test.mjs` and `python scripts/check_site.py`. The tests use mocked Supabase calls; they do not prove that a live project has the migrations, keys or role assignments configured. After provisioning, verify teacher ownership across two accounts, draft isolation, publish, historical URLs, retained import API authorization, duplicate references, personal edges and notes across devices, and phone layout on a preview deployment before pointing learners to it.

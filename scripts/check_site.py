@@ -41,7 +41,7 @@ required += [f'{folder}/{name}' for folder in MODULES
 required.append('knowledge-map/data.js')
 required += ['knowledge-map/explore.html', 'knowledge-map/explore.js',
              'knowledge-map/account.html', 'knowledge-map/account.js',
-             'knowledge-map/case-editor.js', 'knowledge-map/import-preflight.js', 'knowledge-map/legacy-recovery.js',
+             'knowledge-map/case-editor.js', 'knowledge-map/my.html', 'knowledge-map/home.js', 'knowledge-map/account-entry.js',
              'knowledge-map/position-writes.js',
              'docs/KNOWLEDGE-UX-REFACTORING-IMPLEMENTATION-PLAN.md']
 for name in required:
