@@ -5,6 +5,22 @@
   let saving = false, publishing = false, transitioning = false, editSequence = 0, loadSequence = 0, backendAvailable = false;
   const pendingForms = new Set();
   let graphList = [];
+  let taskView = 'concepts', contextConceptId = null;
+  function showTask(view, conceptId = null) {
+    if (!window.SkillLoopStudioUI.views.includes(view)) return;
+    taskView = view;
+    contextConceptId = conceptId;
+    for (const panel of document.querySelectorAll('[data-studio-view]')) panel.hidden = panel.dataset.studioView !== view;
+    for (const button of document.querySelectorAll('[data-studio-task]')) {
+      const active = button.dataset.studioTask === view;
+      button.setAttribute('aria-current', active ? 'page' : 'false');
+    }
+    $('#teacher-task-select').value = view === 'library' ? 'concepts' : view;
+    if (draft) { renderRelations(); renderQuestions(); renderCases(); }
+  }
+  for (const button of document.querySelectorAll('[data-studio-task]'))
+    button.addEventListener('click', () => showTask(button.dataset.studioTask));
+  $('#teacher-task-select').addEventListener('change', (event) => showTask(event.target.value));
   const canvas = new K.Canvas($('#teacher-canvas'), { editable: true, onSelect: selectTopic,
     onSelectEdge: selectRelation,
     onMove: (topic) => {
@@ -38,6 +54,7 @@
     $('#teacher-save').disabled = !draft || saving || publishing || transitioning;
     $('#teacher-reviewed').disabled = !draft || !revision || dirty || saving || publishing || transitioning || !!pendingForms.size;
     $('#teacher-publish').disabled = !draft || !revision || dirty || saving || publishing || transitioning || !!pendingForms.size || !$('#teacher-reviewed').checked;
+    $('#teacher-graph-state').textContent = graphId ? `${graphList.find((item) => item.id === graphId)?.current_version ? 'Published' : 'Draft'}${dirty ? ' · Unsaved changes' : pendingForms.size ? ' · Open form changes' : revision ? ` · Draft ${revision}` : ''}` : 'No graph selected';
   }
   function renderShareLink() {
     const share = $('#teacher-share');
@@ -234,9 +251,14 @@
   async function graphs() {
     graphList = (await K.api('my-graphs')).graphs || [];
     const select = $('#teacher-graphs'); select.replaceChildren();
+    const library = $('#teacher-graph-list'); library.replaceChildren();
     for (const graph of graphList) {
       const option = K.make('option', '', `${graph.title}${graph.current_version ? ` · ${graph.current_version}` : ' · draft'}`);
       option.value = graph.id; select.append(option);
+      const button = K.make('button', 'kn-list-button', `${graph.title} · ${graph.current_version ? 'Published ' + graph.current_version : 'Draft'}`);
+      button.type = 'button';
+      button.addEventListener('click', () => { select.value = graph.id; select.dispatchEvent(new Event('change')); });
+      library.append(button);
     }
     if (!graphList.length) { graphId = null; draft = null; revision = null;
       renderShareLink(); msg('Create your first graph to begin.'); controls(); return; }
@@ -272,7 +294,7 @@
     fillCaseArrays([{ kind: 'source-supported', text: '', sourceSection: '' },
       { kind: 'teaching-inference', text: '' }], [{ topicId: draft.topics[0]?.id || '', kind: 'application', reason: '' }]);
     $('#teacher-case-cancel').hidden = true;
-    renderShareLink();
+    renderShareLink(); showTask('concepts');
     msg(revision ? `Loaded private draft ${revision}.` : 'Sample content loaded. Save a draft before publishing.');
   }
   $('#teacher-sign-in').addEventListener('click', () => window.KnowledgeAccount.open());
@@ -528,7 +550,7 @@
       $('#teacher-discovery-status').textContent = 'Private research note. Verify sources before writing a case.';
     } catch (error) { $('#teacher-discovery-status').textContent = error.message; }
   });
-  controls();
+  showTask('concepts'); controls();
   try {
     const session = await K.api('session');
     backendAvailable = !!session.backendConfigured;

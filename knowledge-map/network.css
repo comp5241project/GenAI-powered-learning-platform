@@ -58,5 +58,20 @@
 #skillloop-prototype .sl-card form.kn-teacher-form { display:grid; gap:8px; }
 #skillloop-prototype .kn-teacher-form label { display:grid; gap:5px; }
 #skillloop-prototype .kn-teacher-form input, #skillloop-prototype .kn-teacher-form textarea, #skillloop-prototype .kn-teacher-form select { width:100%; }
+#skillloop-prototype [data-studio-view][hidden] { display:none; }
+#skillloop-prototype .kn-studio-top { display:flex; flex-wrap:wrap; align-items:end; gap:12px; padding:16px; border:1px solid var(--sl-line); border-radius:12px; background:var(--sl-panel); }
+#skillloop-prototype .kn-studio-top > div:first-child { display:flex; flex-wrap:wrap; align-items:center; gap:12px; flex:1 1 320px; }
+#skillloop-prototype .kn-studio-top label { display:flex; align-items:center; gap:8px; }
+#skillloop-prototype .kn-studio-top select { max-width:min(100%,340px); padding:8px; }
+#skillloop-prototype .kn-studio-top [role=status] { flex-basis:100%; margin:0; }
+#skillloop-prototype .kn-studio-shell { display:grid; grid-template-columns:180px minmax(0,1fr); gap:16px; align-items:start; }
+#skillloop-prototype .kn-studio-main { min-width:0; }
+#skillloop-prototype .kn-studio-nav { position:sticky; top:12px; margin-top:16px; }
+#skillloop-prototype .kn-studio-nav nav { display:grid; gap:5px; }
+#skillloop-prototype .kn-studio-nav button { width:100%; padding:10px; border:1px solid var(--sl-line); border-radius:8px; background:var(--sl-panel); color:var(--sl-text); font:inherit; text-align:left; cursor:pointer; }
+#skillloop-prototype .kn-studio-nav button[aria-current=page] { border-color:var(--sl-accent); background:var(--sl-soft); font-weight:700; }
+#skillloop-prototype .kn-studio-nav > label, #skillloop-prototype #teacher-task-select { display:none; }
+#skillloop-prototype .kn-studio-main .sl-card { margin-top:16px; }
+@media(max-width:760px) { #skillloop-prototype .kn-studio-shell { display:block; } #skillloop-prototype .kn-studio-nav { position:static; } #skillloop-prototype .kn-studio-nav nav { display:none; } #skillloop-prototype .kn-studio-nav > label, #skillloop-prototype #teacher-task-select { display:block; width:100%; } #skillloop-prototype #teacher-task-select { padding:10px; } #skillloop-prototype .kn-studio-top > div, #skillloop-prototype .kn-studio-top label, #skillloop-prototype .kn-studio-top select { min-width:0; max-width:100%; } }
 @media(max-width:760px) { #skillloop-prototype .kn-canvas { height:360px; } #skillloop-prototype .kn-explorer-layout, #skillloop-prototype .kn-teacher-layout { grid-template-columns:1fr; } #skillloop-prototype .kn-context-panel { position:static; max-height:none; } #skillloop-prototype .sl-card { padding:14px; } #skillloop-prototype #kn-selected form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; } #skillloop-prototype #kn-selected form label { grid-column:1/-1; } #skillloop-prototype #kn-selected form input, #skillloop-prototype #kn-selected form textarea { width:100%; } }
 @media(max-width:760px) { body[data-module="knowledge-map"] #skillloop-prototype .sl-top { display:flex; } body[data-module="knowledge-map"] #skillloop-prototype .sl-top .sl-badge { display:none; } body[data-module="knowledge-map"] #skillloop-prototype .sl-head { padding-right:20px; } }
