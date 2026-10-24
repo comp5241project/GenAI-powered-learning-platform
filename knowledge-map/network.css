@@ -1,6 +1,8 @@
 #skillloop-prototype .kn-page-nav { display:flex; flex-wrap:wrap; gap:12px; margin: 12px 0 20px; }
 #skillloop-prototype .sl-top { position:relative; }
-#skillloop-prototype .kn-account-button { min-height:40px; }
+#skillloop-prototype .kn-account-button { width:36px; height:36px; padding:0; background:var(--sl-panel); cursor:pointer; font:inherit; font-size:11px; font-weight:600; }
+#skillloop-prototype .kn-account-button:hover, #skillloop-prototype .kn-account-button[aria-expanded="true"] { border-color:var(--sl-accent); color:var(--sl-accent); }
+#skillloop-prototype .kn-account-button:focus-visible { outline:3px solid var(--sl-accent); outline-offset:2px; }
 #skillloop-prototype .kn-account-menu { position:absolute; z-index:20; right:0; top:100%; width:min(290px,90vw); padding:14px; border:1px solid var(--sl-line); border-radius:10px; background:var(--sl-panel); box-shadow:0 8px 24px #0002; }
 #skillloop-prototype .kn-account-menu[hidden] { display:none; }
 #skillloop-prototype .kn-account-menu a, #skillloop-prototype .kn-account-menu button { display:block; margin:8px 0; }
@@ -57,4 +59,4 @@
 #skillloop-prototype .kn-teacher-form label { display:grid; gap:5px; }
 #skillloop-prototype .kn-teacher-form input, #skillloop-prototype .kn-teacher-form textarea, #skillloop-prototype .kn-teacher-form select { width:100%; }
 @media(max-width:760px) { #skillloop-prototype .kn-canvas { height:360px; } #skillloop-prototype .kn-explorer-layout, #skillloop-prototype .kn-teacher-layout { grid-template-columns:1fr; } #skillloop-prototype .kn-context-panel { position:static; max-height:none; } #skillloop-prototype .sl-card { padding:14px; } #skillloop-prototype #kn-selected form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; } #skillloop-prototype #kn-selected form label { grid-column:1/-1; } #skillloop-prototype #kn-selected form input, #skillloop-prototype #kn-selected form textarea { width:100%; } }
-@media(max-width:760px) { body[data-module="knowledge-map"] #skillloop-prototype .sl-top { display:flex; } body[data-module="knowledge-map"] #skillloop-prototype .sl-top .sl-badge, body[data-module="knowledge-map"] #skillloop-prototype .sl-top .sl-avatar { display:none; } body[data-module="knowledge-map"] #skillloop-prototype .sl-head { padding-right:20px; } }
+@media(max-width:760px) { body[data-module="knowledge-map"] #skillloop-prototype .sl-top { display:flex; } body[data-module="knowledge-map"] #skillloop-prototype .sl-top .sl-badge { display:none; } body[data-module="knowledge-map"] #skillloop-prototype .sl-head { padding-right:20px; } }

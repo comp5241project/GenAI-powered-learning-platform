@@ -3,10 +3,14 @@
   const K = window.KnowledgeNetwork;
   const top = document.querySelector('#site-header .sl-top');
   if (!top || !K) return;
-  const button = K.make('button', 'sl-btn kn-account-button', 'Account');
+  const avatar = top.querySelector('.sl-avatar');
+  if (!avatar) return;
+  const button = K.make('button', 'sl-avatar kn-account-button', 'SL');
   button.type = 'button';
   button.setAttribute('aria-label', 'Knowledge account');
   button.setAttribute('aria-expanded', 'false');
+  button.setAttribute('aria-haspopup', 'menu');
+  avatar.replaceWith(button);
   const menu = K.make('div', 'kn-account-menu');
   menu.hidden = true;
   const dialog = document.createElement('dialog');
@@ -20,6 +24,10 @@
   const link = (label, href) => { const a = K.make('a', '', label); a.href = href; return a; };
   function closeMenu() { menu.hidden = true; button.setAttribute('aria-expanded', 'false'); }
   function render() {
+    button.textContent = session?.signedIn ? session.role === 'teacher' ? 'TC' : 'ST' : 'SL';
+    button.setAttribute('aria-label', session?.signedIn
+      ? `${session.role === 'teacher' ? 'Teacher' : 'Student'} account menu`
+      : 'Knowledge account menu');
     menu.replaceChildren();
     if (session?.signedIn) {
       menu.append(K.make('p', '', `${session.email} · ${session.role === 'teacher' ? 'Teacher' : 'Student'}`));
@@ -88,7 +96,7 @@
     } catch (error) { message.textContent = `Sign in failed: ${error.message}`; }
     finally { submit.disabled = false; }
   });
-  top.append(button, menu);
+  top.append(menu);
   document.querySelector('#skillloop-prototype').append(dialog);
   window.KnowledgeAccount = Object.freeze({ open: openLogin, refresh });
   refresh();
