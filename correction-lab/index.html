@@ -15,6 +15,7 @@
     <script src="../shared/vendor/lucide.min.js" defer></script>
     <script src="../shared/storage.js" defer></script>
     <script src="../shared/navigation.js" defer></script>
+    <script src="cases.js" defer></script>
     <script src="script.js" defer></script>
   </head>
   <body data-root="../" data-module="correction-lab">
@@ -27,44 +28,66 @@
           <div class="sl-kicker">Correction lab</div>
           <h1>Be the one who spots it.</h1>
           <p class="sl-intro">Find the flaw. Explain it. Make it better.</p>
-          <div class="sl-card">
+
+          <div class="sl-row cl-cases-head">
+            <h2 class="cl-heading">Cases</h2>
+            <span class="sl-small" id="sl-progress" aria-live="polite"></span>
+          </div>
+          <div class="cl-cases" id="sl-case-list" role="group" aria-label="Correction cases"></div>
+
+          <div class="sl-card sl-spaced">
             <div class="sl-row">
               <div class="sl-icon-title">
                 <i data-lucide="bug" aria-hidden="true"> </i>
-                <h3>Does this handle every list?</h3>
+                <h3 id="sl-case-title"></h3>
               </div>
-              <span class="sl-chip">Reviewed sample</span>
+              <div class="cl-chips">
+                <span class="sl-chip" id="sl-case-kind"></span>
+                <span class="sl-chip">Authored sample</span>
+              </div>
             </div>
-            <pre class="sl-code">
-def average(numbers):
-    return sum(numbers) / len(numbers)
+            <pre class="sl-code" id="sl-case-code"></pre>
+            <label for="sl-correction">1 · Your counterexample and fix</label>
+            <textarea id="sl-correction"></textarea>
+            <div class="sl-row sl-spaced">
+              <button type="button" class="sl-btn sl-btn-main" id="sl-check">
+                Check the example<i data-lucide="arrow-right" aria-hidden="true"> </i>
+              </button>
+              <button type="button" class="sl-text-button" id="sl-reset">Clear this case</button>
+            </div>
 
-# AI: "This handles any list."</pre
-            >
-            <label for="sl-correction">Your counterexample and fix</label>
-            <textarea
-              id="sl-correction"
-              placeholder="What input breaks this assumption?"
-            ></textarea>
-            <button type="button" class="sl-btn sl-btn-main sl-spaced" id="sl-check">
-              Check the example<i data-lucide="arrow-right" aria-hidden="true"> </i>
-            </button>
-            <div class="sl-feedback" id="sl-correction-result" aria-live="polite" hidden>
+            <div class="sl-feedback" id="sl-correction-result" hidden>
               <div class="sl-icon-title">
                 <i data-lucide="circle-check" aria-hidden="true"> </i>
-                <h3>Counterexample: []</h3>
+                <h3 id="sl-ref-title"></h3>
               </div>
-              <p>
-                An empty list causes division by zero. Define the empty-input rule before
-                calculating.
+              <p id="sl-ref-text"></p>
+              <p class="cl-evidence">
+                <strong>Expected result:</strong> <span id="sl-ref-evidence"></span>
               </p>
-              <p class="sl-small">Reference explanation · Your answer is not auto-scored</p>
-              <button type="button" class="sl-btn" id="sl-next" style="margin-top: 14px">
-                Try a new case<i data-lucide="arrow-up-right" aria-hidden="true"> </i>
-              </button>
+              <fieldset class="cl-criteria">
+                <legend>2 · Compare your answer. Tick what it covers.</legend>
+                <div id="sl-criteria"></div>
+              </fieldset>
+              <p class="sl-small">
+                Reference explanation · Results are written by hand, not run · Your answer is not
+                auto-scored
+              </p>
+              <div class="sl-row">
+                <button type="button" class="sl-btn" id="sl-next">
+                  Try a related task<i data-lucide="arrow-up-right" aria-hidden="true"> </i>
+                </button>
+                <a class="sl-small" id="sl-lesson-link" href="../knowledge-map/">Review the lesson</a>
+              </div>
             </div>
-            <div id="sl-next-question" class="sl-message" hidden>
-              A function returns items[0]. What inputs would you test, and why?
+
+            <div id="sl-next-question" hidden>
+              <div class="sl-message" id="sl-followup-prompt"></div>
+              <label for="sl-followup">3 · Your answer to the related task</label>
+              <textarea id="sl-followup" placeholder="List the inputs or checks you would try."></textarea>
+              <button type="button" class="sl-btn sl-spaced" id="sl-next-case">
+                Next case<i data-lucide="arrow-right" aria-hidden="true"> </i>
+              </button>
             </div>
           </div>
           <p class="sl-small sl-spaced">

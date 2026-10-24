@@ -1,25 +1,140 @@
-/** Module 4: an authored error example and reference explanation, not an AI grader. */
+/** Module 4: authored correction cases with reference explanations and self-checks, not an AI grader. */
 (function () {
   const app = window.SkillLoop;
+  const cases = window.SkillLoopCases;
   const $ = (selector) => document.querySelector(selector);
+  const text = (value) => (typeof value === 'string' ? value.slice(0, 5000) : '');
   const saved = app.read('correction', {});
-  let revealed = saved.revealed === true;
-  let nextSeen = saved.nextSeen === true;
-  const input = $('#sl-correction');
-  input.maxLength = 5000;
-  input.value = typeof saved.draft === 'string' ? saved.draft.slice(0, 5000) : '';
 
+  // Per-case progress. Older saves only had the top-level fields for one case.
+  const progress = {};
+  const stored = saved.cases && typeof saved.cases === 'object' ? { ...saved.cases } : {};
+  if (!saved.cases && (saved.draft || saved.revealed)) {
+    stored[saved.caseId || cases[0].id] = saved;
+  }
+  cases.forEach((item) => {
+    const entry = stored[item.id] && typeof stored[item.id] === 'object' ? stored[item.id] : {};
+    progress[item.id] = {
+      draft: text(entry.draft),
+      followUp: text(entry.followUp),
+      revealed: entry.revealed === true,
+      nextSeen: entry.nextSeen === true,
+      checks: Array.isArray(entry.checks)
+        ? entry.checks.filter((n) => Number.isInteger(n) && n >= 0 && n < item.criteria.length)
+        : [],
+    };
+  });
+
+  const requested = new URLSearchParams(location.search).get('case');
+  const find = (id) => cases.findIndex((item) => item.id === id);
+  let current = Math.max(0, find(requested) >= 0 ? find(requested) : find(saved.caseId));
+
+  const input = $('#sl-correction');
+  const followUp = $('#sl-followup');
+  input.maxLength = 5000;
+  followUp.maxLength = 5000;
+
+  const state = () => progress[cases[current].id];
   function save() {
+    const item = state();
+    // Top-level fields mirror the open case so the original contract still reads correctly.
     app.write('correction', {
-      draft: input.value,
-      revealed,
-      nextSeen,
-      caseId: 'average-empty-list',
+      draft: item.draft,
+      revealed: item.revealed,
+      nextSeen: item.nextSeen,
+      caseId: cases[current].id,
+      cases: progress,
     });
   }
+  function status(id) {
+    const item = progress[id];
+    if (item.followUp.trim()) return 'Practised';
+    if (item.revealed) return 'Reviewed';
+    if (item.draft.trim()) return 'Draft';
+    return 'New';
+  }
+
+  function renderList() {
+    const list = $('#sl-case-list');
+    list.replaceChildren();
+    cases.forEach((item, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'sl-btn cl-case';
+      button.setAttribute('aria-pressed', String(index === current));
+      const name = document.createElement('span');
+      name.textContent = item.name;
+      const label = document.createElement('span');
+      label.className = 'sl-small';
+      label.textContent = `${item.kind} · ${status(item.id)}`;
+      button.append(name, label);
+      button.addEventListener('click', () => open(index));
+      list.append(button);
+    });
+    const reviewed = cases.filter((item) => progress[item.id].revealed).length;
+    $('#sl-progress').textContent = `${reviewed} of ${cases.length} reviewed`;
+  }
+
+  function renderCase() {
+    const item = cases[current];
+    const entry = state();
+    $('#sl-case-title').textContent = item.title;
+    $('#sl-case-kind').textContent = item.kind;
+    $('#sl-case-code').textContent = item.code;
+    input.placeholder = item.prompt;
+    input.value = entry.draft;
+    input.setCustomValidity('');
+    $('#sl-ref-title').textContent = item.reference.title;
+    $('#sl-ref-text').textContent = item.reference.text;
+    $('#sl-ref-evidence').textContent = item.reference.evidence;
+    $('#sl-lesson-link').href = `../knowledge-map/?topic=${item.conceptId}`;
+    $('#sl-followup-prompt').textContent = item.followUp;
+    followUp.value = entry.followUp;
+
+    const criteria = $('#sl-criteria');
+    criteria.replaceChildren();
+    item.criteria.forEach((criterion, index) => {
+      const label = document.createElement('label');
+      label.className = 'cl-check';
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.checked = entry.checks.includes(index);
+      box.addEventListener('change', () => {
+        entry.checks = box.checked
+          ? [...entry.checks, index].sort()
+          : entry.checks.filter((n) => n !== index);
+        save();
+      });
+      const span = document.createElement('span');
+      span.textContent = criterion;
+      label.append(box, span);
+      criteria.append(label);
+    });
+
+    $('#sl-correction-result').hidden = !entry.revealed;
+    $('#sl-next-question').hidden = !entry.nextSeen;
+    renderList();
+  }
+
+  function open(index) {
+    current = index;
+    const url = new URL(location.href);
+    url.searchParams.set('case', cases[current].id);
+    history.replaceState(null, '', url);
+    save();
+    renderCase();
+  }
+
   input.addEventListener('input', () => {
     input.setCustomValidity('');
+    state().draft = input.value;
     save();
+    renderList();
+  });
+  followUp.addEventListener('input', () => {
+    state().followUp = followUp.value;
+    save();
+    renderList();
   });
   $('#sl-check').addEventListener('click', () => {
     if (!input.value.trim()) {
@@ -28,21 +143,40 @@
       return;
     }
     input.setCustomValidity('');
-    revealed = true;
-    $('#sl-correction-result').hidden = false;
+    state().revealed = true;
     save();
+    renderCase();
+    $('#sl-ref-title').focus();
     app.appendEvent({
       module: 'correction-lab',
       type: 'reference-opened',
-      conceptId: 'software-testing',
-      caseId: 'average-empty-list',
+      conceptId: cases[current].conceptId,
+      caseId: cases[current].id,
     });
   });
   $('#sl-next').addEventListener('click', () => {
-    nextSeen = true;
-    $('#sl-next-question').hidden = false;
+    state().nextSeen = true;
     save();
+    renderCase();
+    followUp.focus();
   });
-  $('#sl-correction-result').hidden = !revealed;
-  $('#sl-next-question').hidden = !nextSeen;
+  $('#sl-next-case').addEventListener('click', () => {
+    open((current + 1) % cases.length);
+    $('#sl-case-title').scrollIntoView({ block: 'center' });
+  });
+  $('#sl-reset').addEventListener('click', () => {
+    if (!confirm('Clear your answers for this case?')) return;
+    progress[cases[current].id] = {
+      draft: '',
+      followUp: '',
+      revealed: false,
+      nextSeen: false,
+      checks: [],
+    };
+    save();
+    renderCase();
+  });
+
+  $('#sl-ref-title').tabIndex = -1;
+  renderCase();
 })();
