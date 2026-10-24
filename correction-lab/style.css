@@ -6,11 +6,17 @@
 #skillloop-prototype .cl-cases-head {
   margin-top: 22px;
 }
+#skillloop-prototype .cl-topic {
+  margin: 14px 0 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sl-sub);
+}
 #skillloop-prototype .cl-cases {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 6px;
 }
 #skillloop-prototype .cl-case {
   flex-direction: column;
@@ -27,8 +33,13 @@
   font-family: Consolas, monospace;
   overflow-wrap: anywhere;
 }
-#skillloop-prototype .cl-evidence strong {
+#skillloop-prototype .cl-evidence strong,
+#skillloop-prototype .cl-text {
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
+}
+#skillloop-prototype .sl-code.cl-text {
+  font-size: 14px;
+  line-height: 1.6;
 }
 #skillloop-prototype .cl-criteria {
   border: 0;

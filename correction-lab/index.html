@@ -27,13 +27,16 @@
         <main id="main-content" class="sl-main">
           <div class="sl-kicker">Correction lab</div>
           <h1>Be the one who spots it.</h1>
-          <p class="sl-intro">Find the flaw. Explain it. Make it better.</p>
+          <p class="sl-intro">
+            Find the flaw. Explain it. Make it better. Practise on code, AI coding agents and team
+            communication.
+          </p>
 
           <div class="sl-row cl-cases-head">
             <h2 class="cl-heading">Cases</h2>
             <span class="sl-small" id="sl-progress" aria-live="polite"></span>
           </div>
-          <div class="cl-cases" id="sl-case-list" role="group" aria-label="Correction cases"></div>
+          <div id="sl-case-list"></div>
 
           <div class="sl-card sl-spaced">
             <div class="sl-row">
@@ -43,11 +46,12 @@
               </div>
               <div class="cl-chips">
                 <span class="sl-chip" id="sl-case-kind"></span>
+                <span class="sl-chip" id="sl-case-fluency" hidden></span>
                 <span class="sl-chip">Authored sample</span>
               </div>
             </div>
             <pre class="sl-code" id="sl-case-code"></pre>
-            <label for="sl-correction">1 · Your counterexample and fix</label>
+            <label for="sl-correction">1 · What is wrong, and how would you fix it?</label>
             <textarea id="sl-correction"></textarea>
             <div class="sl-row sl-spaced">
               <button type="button" class="sl-btn sl-btn-main" id="sl-check">
@@ -63,14 +67,14 @@
               </div>
               <p id="sl-ref-text"></p>
               <p class="cl-evidence">
-                <strong>Expected result:</strong> <span id="sl-ref-evidence"></span>
+                <strong id="sl-ref-label"></strong> <span id="sl-ref-evidence"></span>
               </p>
               <fieldset class="cl-criteria">
                 <legend>2 · Compare your answer. Tick what it covers.</legend>
                 <div id="sl-criteria"></div>
               </fieldset>
               <p class="sl-small">
-                Reference explanation · Results are written by hand, not run · Your answer is not
+                Reference explanation · Evidence is written by hand, not run · Your answer is not
                 auto-scored
               </p>
               <div class="sl-row">
@@ -84,7 +88,7 @@
             <div id="sl-next-question" hidden>
               <div class="sl-message" id="sl-followup-prompt"></div>
               <label for="sl-followup">3 · Your answer to the related task</label>
-              <textarea id="sl-followup" placeholder="List the inputs or checks you would try."></textarea>
+              <textarea id="sl-followup" placeholder="Write your answer here."></textarea>
               <button type="button" class="sl-btn sl-spaced" id="sl-next-case">
                 Next case<i data-lucide="arrow-right" aria-hidden="true"> </i>
               </button>

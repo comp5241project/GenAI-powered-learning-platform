@@ -57,7 +57,18 @@
   function renderList() {
     const list = $('#sl-case-list');
     list.replaceChildren();
+    const groups = {};
     cases.forEach((item, index) => {
+      if (!groups[item.topic]) {
+        const heading = document.createElement('h3');
+        heading.className = 'cl-topic';
+        heading.textContent = item.topic;
+        groups[item.topic] = document.createElement('div');
+        groups[item.topic].className = 'cl-cases';
+        groups[item.topic].setAttribute('role', 'group');
+        groups[item.topic].setAttribute('aria-label', item.topic);
+        list.append(heading, groups[item.topic]);
+      }
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'sl-btn cl-case';
@@ -69,7 +80,7 @@
       label.textContent = `${item.kind} · ${status(item.id)}`;
       button.append(name, label);
       button.addEventListener('click', () => open(index));
-      list.append(button);
+      groups[item.topic].append(button);
     });
     const reviewed = cases.filter((item) => progress[item.id].revealed).length;
     $('#sl-progress').textContent = `${reviewed} of ${cases.length} reviewed`;
@@ -80,13 +91,18 @@
     const entry = state();
     $('#sl-case-title').textContent = item.title;
     $('#sl-case-kind').textContent = item.kind;
+    $('#sl-case-fluency').textContent = `AI Fluency: ${item.fluency}`;
+    $('#sl-case-fluency').hidden = !item.fluency;
     $('#sl-case-code').textContent = item.code;
+    $('#sl-case-code').classList.toggle('cl-text', item.format === 'text');
     input.placeholder = item.prompt;
     input.value = entry.draft;
     input.setCustomValidity('');
     $('#sl-ref-title').textContent = item.reference.title;
     $('#sl-ref-text').textContent = item.reference.text;
+    $('#sl-ref-label').textContent = `${item.reference.label || 'Evidence'}:`;
     $('#sl-ref-evidence').textContent = item.reference.evidence;
+    $('#sl-ref-evidence').parentElement.classList.toggle('cl-text', item.format === 'text');
     $('#sl-lesson-link').href = `../knowledge-map/?topic=${item.conceptId}`;
     $('#sl-followup-prompt').textContent = item.followUp;
     followUp.value = entry.followUp;
@@ -138,7 +154,7 @@
   });
   $('#sl-check').addEventListener('click', () => {
     if (!input.value.trim()) {
-      input.setCustomValidity('Try a counterexample first.');
+      input.setCustomValidity('Describe the problem first.');
       input.reportValidity();
       return;
     }
