@@ -8,5 +8,12 @@
       cases: (draft?.events || []).filter((item) => !item.archived && item.links?.some((link) => link.topicId === conceptId)).length,
     };
   }
-  window.SkillLoopStudioUI = { views, relatedCounts };
+  function matchesConcept(view, item, conceptId) {
+    if (!conceptId) return true;
+    if (view === 'relationships') return item.source === conceptId || item.target === conceptId;
+    if (view === 'questions') return item.topicId === conceptId;
+    if (view === 'cases') return !!item.links?.some((link) => link.topicId === conceptId);
+    return false;
+  }
+  window.SkillLoopStudioUI = { views, relatedCounts, matchesConcept };
 })();

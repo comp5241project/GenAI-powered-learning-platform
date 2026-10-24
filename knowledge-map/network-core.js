@@ -106,7 +106,9 @@
         }
       });
       const finish = () => {
-        if (this.drag?.kind === 'node') this.options.onMove?.(this.drag.item, { x: this.drag.x0, y: this.drag.y0 });
+        if (this.drag?.kind === 'node' &&
+            (this.drag.item.x !== this.drag.x0 || this.drag.item.y !== this.drag.y0))
+          this.options.onMove?.(this.drag.item, { x: this.drag.x0, y: this.drag.y0 });
         this.drag = null;
       };
       host.addEventListener('pointerup', finish);
@@ -166,6 +168,7 @@
         button.addEventListener('click', () => this.select(item.id));
         if (this.options.editable) button.addEventListener('pointerdown', (event) => {
           if (event.button !== 0) return;
+          this.select(item.id);
           this.drag = { kind: 'node', item, x: event.clientX, y: event.clientY, x0: item.x, y0: item.y };
           this.host.setPointerCapture(event.pointerId);
           event.stopPropagation();

@@ -6,21 +6,76 @@
   const pendingForms = new Set();
   let graphList = [];
   let taskView = 'concepts', contextConceptId = null;
+  const editorForms = { relationships: '#teacher-relation', questions: '#teacher-question', cases: '#teacher-case' };
+  function updateTaskContext() {
+    for (const view of Object.keys(editorForms)) {
+      const active = taskView === view && contextConceptId;
+      const label = $(`#${view}-context`);
+      label.hidden = !active;
+      label.textContent = active ? `Showing content related to ${draft?.topics.find((item) => item.id === contextConceptId)?.title || contextConceptId}` : '';
+      document.querySelector(`[data-clear-context="${view}"]`).hidden = !active;
+      document.querySelector(`[data-return-concept="${view}"]`).hidden = !active;
+    }
+  }
   function showTask(view, conceptId = null) {
     if (!window.SkillLoopStudioUI.views.includes(view)) return;
     taskView = view;
     contextConceptId = conceptId;
+    if (conceptId && editorForms[view]) {
+      const form = $(editorForms[view]);
+      const items = view === 'relationships' ? draft?.relations : view === 'questions' ? draft?.questions : draft?.events;
+      const item = items?.find((entry) => entry.id === form.dataset.editId);
+      if (!form.hidden && (!item || !window.SkillLoopStudioUI.matchesConcept(view, item, conceptId))) {
+        if (pendingForms.has(form)) msg('An unapplied form from another concept remains open. Apply or cancel it before using this filter.');
+        else hideEditor(view);
+      }
+    }
     for (const panel of document.querySelectorAll('[data-studio-view]')) panel.hidden = panel.dataset.studioView !== view;
     for (const button of document.querySelectorAll('[data-studio-task]')) {
       const active = button.dataset.studioTask === view;
       button.setAttribute('aria-current', active ? 'page' : 'false');
     }
-    $('#teacher-task-select').value = view === 'library' ? 'concepts' : view;
+    $('#teacher-task-select').value = view;
+    updateTaskContext();
     if (draft) { renderRelations(); renderQuestions(); renderCases(); }
   }
   for (const button of document.querySelectorAll('[data-studio-task]'))
     button.addEventListener('click', () => showTask(button.dataset.studioTask));
   $('#teacher-task-select').addEventListener('change', (event) => showTask(event.target.value));
+  for (const view of Object.keys(editorForms)) {
+    document.querySelector(`[data-new-editor="${view}"]`).addEventListener('click', () => openNewEditor(view));
+    document.querySelector(`[data-clear-context="${view}"]`).addEventListener('click', () => showTask(view));
+    document.querySelector(`[data-return-concept="${view}"]`).addEventListener('click', () => showTask('concepts'));
+  }
+  function revealEditor(view) {
+    const form = $(editorForms[view]);
+    form.hidden = false;
+    form.closest('.kn-detail-editor').hidden = false;
+    form.scrollIntoView({ block: 'nearest' });
+  }
+  function hideEditor(view) {
+    const form = $(editorForms[view]);
+    form.hidden = true;
+    form.closest('.kn-detail-editor').hidden = true;
+  }
+  function openNewEditor(view) {
+    if (!draft) return;
+    const form = $(editorForms[view]);
+    if (pendingForms.has(form) && !window.confirm('Discard the open form changes?')) return;
+    if (pendingForms.has(form)) formDiscarded(form);
+    form.reset(); delete form.dataset.editId;
+    form.querySelector('button[type=submit]').textContent = `Add ${view === 'relationships' ? 'relationship' : view === 'questions' ? 'question' : 'case'}`;
+    if (view === 'relationships') {
+      if (contextConceptId) form.elements.source.value = contextConceptId;
+    } else if (view === 'questions') {
+      if (contextConceptId) form.elements.topicId.value = contextConceptId;
+    } else {
+      fillCaseArrays([{ kind: 'source-supported', text: '', sourceSection: '' },
+        { kind: 'teaching-inference', text: '' }], [{ topicId: contextConceptId || draft.topics[0]?.id || '', kind: 'application', reason: '' }]);
+    }
+    $(`#${form.id}-cancel`).hidden = false;
+    revealEditor(view);
+  }
   const canvas = new K.Canvas($('#teacher-canvas'), { editable: true, onSelect: selectTopic,
     onSelectEdge: selectRelation,
     onMove: (topic) => {
@@ -55,6 +110,11 @@
     $('#teacher-reviewed').disabled = !draft || !revision || dirty || saving || publishing || transitioning || !!pendingForms.size;
     $('#teacher-publish').disabled = !draft || !revision || dirty || saving || publishing || transitioning || !!pendingForms.size || !$('#teacher-reviewed').checked;
     $('#teacher-graph-state').textContent = graphId ? `${graphList.find((item) => item.id === graphId)?.current_version ? 'Published' : 'Draft'}${dirty ? ' · Unsaved changes' : pendingForms.size ? ' · Open form changes' : revision ? ` · Draft ${revision}` : ''}` : 'No graph selected';
+    $('#teacher-review-state').textContent = !draft ? 'Choose or create a graph first.' : pendingForms.size
+      ? 'An editor has unapplied changes. Apply or cancel its form before review and publish.'
+      : dirty ? 'Unsaved draft changes. Save the draft before review and publish.'
+        : revision ? `Saved private draft ${revision}. Preview each page, then confirm the review to publish.`
+          : 'Save this private draft before review and publish.';
   }
   function renderShareLink() {
     const share = $('#teacher-share');
@@ -145,14 +205,16 @@
     form.elements.type.value = relation.type; form.elements.reason.value = relation.reason;
     form.querySelector('button[type=submit]').textContent = 'Save relationship';
     $('#teacher-relation-cancel').hidden = false;
-    form.scrollIntoView({ block: 'center' });
+    showTask('relationships', taskView === 'relationships' ? contextConceptId : null);
+    revealEditor('relationships');
   }
   function renderRelations() {
     const box = $('#teacher-relations'); box.replaceChildren();
     for (const relation of draft.relations) {
+      if (taskView === 'relationships' && !window.SkillLoopStudioUI.matchesConcept('relationships', relation, contextConceptId)) continue;
       const row = K.make('p', '', `${relation.source} → ${relation.target} (${relation.type}): ${relation.reason} `);
       const edit = K.make('button', 'sl-text-button', 'Edit'); edit.type = 'button';
-      edit.addEventListener('click', () => { canvas.selectEdge(relation.id); });
+      edit.addEventListener('click', () => selectRelation(relation));
       const button = K.make('button', 'sl-text-button', 'Remove'); button.type = 'button';
       button.addEventListener('click', () => {
         const attached = (draft.activities || []).filter((item) => item.relationId === relation.id);
@@ -167,6 +229,7 @@
   function renderQuestions() {
     const box = $('#teacher-questions'); box.replaceChildren();
     for (const question of draft.questions || []) {
+      if (taskView === 'questions' && !window.SkillLoopStudioUI.matchesConcept('questions', question, contextConceptId)) continue;
       const row = K.make('p', '', `${question.archived ? '[Archived] ' : ''}${question.topicId}: ${question.prompt} `);
       const edit = K.make('button', 'sl-text-button', 'Edit'); edit.type = 'button';
       edit.addEventListener('click', () => {
@@ -179,7 +242,7 @@
         form.elements.feedback.value = question.feedback;
         form.querySelector('button[type=submit]').textContent = 'Save question';
         $('#teacher-question-cancel').hidden = false;
-        form.scrollIntoView({ block: 'center' });
+        revealEditor('questions');
       });
       const archive = K.make('button', 'sl-text-button', question.archived ? 'Restore' : 'Archive'); archive.type = 'button';
       archive.addEventListener('click', () => { question.archived = !question.archived; changed(); renderQuestions(); });
@@ -190,6 +253,7 @@
   function renderCases() {
     const box = $('#teacher-cases'); box.replaceChildren();
     for (const item of draft.events || []) {
+      if (taskView === 'cases' && !window.SkillLoopStudioUI.matchesConcept('cases', item, contextConceptId)) continue;
       const row = K.make('p', '', `${item.archived ? '[Archived] ' : ''}${item.title} · ${item.date} `);
       const edit = K.make('button', 'sl-text-button', 'Edit'); edit.type = 'button';
       edit.addEventListener('click', () => {
@@ -202,7 +266,7 @@
         form.elements.sourceUrl.value = item.source.url; form.elements.sourceDate.value = item.source.publishedDate;
         fillCaseArrays(item.claims, item.links);
         $('#teacher-case-cancel').hidden = false;
-        form.querySelector('button[type=submit]').textContent = 'Save case'; form.scrollIntoView({ block: 'center' });
+        form.querySelector('button[type=submit]').textContent = 'Save case'; revealEditor('cases');
       });
       const archive = K.make('button', 'sl-text-button', item.archived ? 'Restore' : 'Archive'); archive.type = 'button';
       archive.addEventListener('click', () => { item.archived = !item.archived; changed(); renderCases(); });
@@ -266,6 +330,7 @@
       { kind: 'teaching-inference', text: '' }], [{ topicId: draft.topics[0]?.id || '', kind: 'application', reason: '' }]);
     form.querySelector('button[type=submit]').textContent = 'Add case';
     $('#teacher-case-cancel').hidden = true;
+    hideEditor('cases');
   });
   async function graphs() {
     graphList = (await K.api('my-graphs')).graphs || [];
@@ -276,11 +341,12 @@
       option.value = graph.id; select.append(option);
       const button = K.make('button', 'kn-list-button', `${graph.title} · ${graph.current_version ? 'Published ' + graph.current_version : 'Draft'}`);
       button.type = 'button';
+      button.dataset.graphId = graph.id;
       button.addEventListener('click', () => { select.value = graph.id; select.dispatchEvent(new Event('change')); });
       library.append(button);
     }
     if (!graphList.length) { graphId = null; draft = null; revision = null;
-      renderShareLink(); msg('Create your first graph to begin.'); controls(); return; }
+      renderShareLink(); showTask('library'); msg('Create your first graph to begin.'); controls(); return; }
     if (!graphList.some((item) => item.id === graphId)) graphId = graphList[0].id;
     select.value = graphId;
     await loadDraft();
@@ -299,6 +365,7 @@
       const form = $(selector); form.reset(); delete form.dataset.editId;
       form.querySelector('button[type=submit]').textContent = selector === '#teacher-relation' ? 'Add relationship' : selector === '#teacher-question' ? 'Add question' : 'Add case';
     }
+    for (const view of Object.keys(editorForms)) hideEditor(view);
     $('#teacher-relation-cancel').hidden = true;
     $('#teacher-question-cancel').hidden = true;
     selectedId = null;
@@ -422,12 +489,14 @@
     pendingForms.delete(form); changed(); renderGraph(); form.reset(); delete form.dataset.editId;
     form.querySelector('button[type=submit]').textContent = 'Add relationship';
     $('#teacher-relation-cancel').hidden = true;
+    hideEditor('relationships');
   });
   $('#teacher-relation-cancel').addEventListener('click', () => {
     const form = $('#teacher-relation');
     formDiscarded(form); form.reset(); delete form.dataset.editId;
     form.querySelector('button[type=submit]').textContent = 'Add relationship';
     $('#teacher-relation-cancel').hidden = true;
+    hideEditor('relationships');
   });
   $('#teacher-question').addEventListener('submit', (event) => {
     event.preventDefault(); if (!draft) return;
@@ -445,12 +514,14 @@
     pendingForms.delete(form); changed(); renderQuestions(); form.reset(); delete form.dataset.editId;
     form.querySelector('button[type=submit]').textContent = 'Add question';
     $('#teacher-question-cancel').hidden = true;
+    hideEditor('questions');
   });
   $('#teacher-question-cancel').addEventListener('click', () => {
     const form = $('#teacher-question');
     formDiscarded(form); form.reset(); delete form.dataset.editId;
     form.querySelector('button[type=submit]').textContent = 'Add question';
     $('#teacher-question-cancel').hidden = true;
+    hideEditor('questions');
   });
   $('#teacher-case').addEventListener('submit', (event) => {
     event.preventDefault(); if (!draft) return;
@@ -475,6 +546,7 @@
       { kind: 'teaching-inference', text: '' }], [{ topicId: draft.topics[0]?.id || '', kind: 'application', reason: '' }]);
     form.querySelector('button[type=submit]').textContent = 'Add case';
     $('#teacher-case-cancel').hidden = true;
+    hideEditor('cases');
   });
   for (const selector of ['#teacher-relation', '#teacher-question', '#teacher-case']) {
     const form = $(selector);
@@ -482,6 +554,15 @@
   }
   async function saveDraft() {
     if (!draft || saving || publishing) return false;
+    for (const form of pendingForms) {
+      if (!form.checkValidity()) {
+        const view = Object.keys(editorForms).find((key) => $(editorForms[key]) === form);
+        showTask(view, taskView === view ? contextConceptId : null);
+        revealEditor(view); form.reportValidity();
+        msg('Complete or cancel the open form before saving.');
+        return false;
+      }
+    }
     for (const form of [...pendingForms]) form.requestSubmit();
     if (pendingForms.size) { msg('Complete or cancel the open relationship, question or case form before saving.'); return false; }
     const payload = structuredClone(draft);
@@ -537,7 +618,7 @@
     $(`#${id}`).addEventListener('click', () => preview(page));
   $('#teacher-reviewed').addEventListener('change', controls);
   $('#teacher-publish').addEventListener('click', async () => {
-    if (!revision || dirty || saving || publishing || !$('#teacher-reviewed').checked) return;
+    if (!revision || dirty || pendingForms.size || saving || publishing || !$('#teacher-reviewed').checked) return;
     publishing = true; controls();
     try {
       const result = await K.api('publish', 'POST', { graphId, revision, reviewed: true });
@@ -547,6 +628,8 @@
         graph.current_version = result.version;
         const option = [...$('#teacher-graphs').options].find((item) => item.value === graphId);
         if (option) option.textContent = `${graph.title} · ${result.version}`;
+        const libraryItem = [...$('#teacher-graph-list').children].find((item) => item.dataset.graphId === graphId);
+        if (libraryItem) libraryItem.textContent = `${graph.title} · Published ${result.version}`;
       }
       renderShareLink();
       msg(dirty || pendingForms.size
