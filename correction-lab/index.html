@@ -24,83 +24,103 @@
       <header id="site-header" class="sl-head"></header>
       <div class="sl-shell">
         <aside id="site-navigation" class="sl-side" aria-label="Workspace navigation"></aside>
-        <main id="main-content" class="sl-main">
+        <main id="main-content" class="sl-main cl-main">
           <div class="sl-kicker">Correction lab</div>
           <h1>Be the one who spots it.</h1>
           <p class="sl-intro">
-            Find the flaw. Explain it. Make it better. Practise on code, AI coding agents and team
-            communication.
+            AI answers sound confident. Find the lines that are wrong, explain why, and write a
+            better version.
           </p>
 
-          <div class="sl-row cl-cases-head">
-            <h2 class="cl-heading">Cases</h2>
-            <span class="sl-small" id="sl-progress" aria-live="polite"></span>
+          <div class="cl-summary">
+            <span id="sl-progress" aria-live="polite"></span>
+            <span id="sl-stars"></span>
           </div>
           <div id="sl-case-list"></div>
 
-          <div class="sl-card sl-spaced">
-            <div class="sl-row">
-              <div class="sl-icon-title">
-                <i data-lucide="bug" aria-hidden="true"> </i>
-                <h3 id="sl-case-title"></h3>
-              </div>
-              <div class="cl-chips">
-                <span class="sl-chip" id="sl-case-kind"></span>
-                <span class="sl-chip" id="sl-case-fluency" hidden></span>
-                <span class="sl-chip">Authored sample</span>
-              </div>
+          <article class="sl-card cl-case-card" aria-labelledby="sl-case-title">
+            <div class="cl-chips">
+              <span class="sl-chip" id="sl-case-kind"></span>
+              <span class="sl-chip" id="sl-case-fluency" hidden></span>
+              <span class="sl-chip" id="sl-case-source"></span>
             </div>
-            <pre class="sl-code" id="sl-case-code"></pre>
-            <label for="sl-correction">1 · What is wrong, and how would you fix it?</label>
-            <textarea id="sl-correction"></textarea>
-            <div class="sl-row sl-spaced">
-              <button type="button" class="sl-btn sl-btn-main" id="sl-check">
-                Check the example<i data-lucide="arrow-right" aria-hidden="true"> </i>
-              </button>
-              <button type="button" class="sl-text-button" id="sl-reset">Clear this case</button>
+            <h2 id="sl-case-title" class="cl-title" tabindex="-1"></h2>
+
+            <div class="cl-question">
+              <span class="cl-who"><i data-lucide="user-round" aria-hidden="true"></i>Question to the AI</span>
+              <p id="sl-case-question"></p>
             </div>
 
-            <div class="sl-feedback" id="sl-correction-result" hidden>
-              <div class="sl-icon-title">
-                <i data-lucide="circle-check" aria-hidden="true"> </i>
-                <h3 id="sl-ref-title"></h3>
+            <section class="cl-step" aria-labelledby="cl-step1">
+              <h3 id="cl-step1"><span class="sl-dot">1</span>Spot the problem</h3>
+              <p class="cl-hint" id="sl-spot-hint"></p>
+              <div class="cl-answer">
+                <span class="cl-who"><i data-lucide="bot" aria-hidden="true"></i>AI answer</span>
+                <div id="sl-lines" role="group" aria-label="Lines of the AI answer"></div>
               </div>
-              <p id="sl-ref-text"></p>
-              <p class="cl-evidence">
-                <strong id="sl-ref-label"></strong> <span id="sl-ref-evidence"></span>
-              </p>
-              <fieldset class="cl-criteria">
-                <legend>2 · Compare your answer. Tick what it covers.</legend>
-                <div id="sl-criteria"></div>
-              </fieldset>
-              <p class="sl-small">
-                Reference explanation · Evidence is written by hand, not run · Your answer is not
-                auto-scored
-              </p>
-              <div class="sl-row">
-                <button type="button" class="sl-btn" id="sl-next">
-                  Try a related task<i data-lucide="arrow-up-right" aria-hidden="true"> </i>
+              <button type="button" class="sl-btn sl-btn-main sl-spaced" id="sl-spot-check">
+                Check my lines<i data-lucide="arrow-right" aria-hidden="true"></i>
+              </button>
+              <div class="cl-result" id="sl-spot-result" aria-live="polite" hidden></div>
+            </section>
+
+            <section class="cl-step" id="sl-step-cause" aria-labelledby="cl-step2" hidden>
+              <h3 id="cl-step2"><span class="sl-dot">2</span>Why is it wrong?</h3>
+              <div class="cl-options" id="sl-cause-options" role="group" aria-label="Possible causes"></div>
+              <div class="cl-result" id="sl-cause-result" aria-live="polite" hidden></div>
+            </section>
+
+            <section class="cl-step" id="sl-step-fix" aria-labelledby="cl-step3" hidden>
+              <h3 id="cl-step3"><span class="sl-dot">3</span>Fix it</h3>
+              <label for="sl-correction" id="sl-fix-prompt"></label>
+              <textarea id="sl-correction" placeholder="Write your fix in your own words."></textarea>
+              <button type="button" class="sl-btn sl-btn-main sl-spaced" id="sl-check">
+                Compare with a reference<i data-lucide="arrow-right" aria-hidden="true"></i>
+              </button>
+              <div class="sl-feedback" id="sl-correction-result" hidden>
+                <div class="sl-icon-title">
+                  <i data-lucide="lightbulb" aria-hidden="true"></i>
+                  <h4 id="sl-ref-title"></h4>
+                </div>
+                <p id="sl-ref-text"></p>
+                <pre class="sl-code cl-example" id="sl-ref-example"></pre>
+                <fieldset class="cl-criteria">
+                  <legend>Tick what your fix covers</legend>
+                  <div id="sl-criteria"></div>
+                </fieldset>
+                <p class="cl-note">
+                  This is a reference answer written by the team. Your written fix is not scored; the
+                  ticks are your own check.
+                </p>
+              </div>
+            </section>
+
+            <section class="cl-step" id="sl-next-question" aria-labelledby="cl-step4" hidden>
+              <h3 id="cl-step4"><span class="sl-dot">4</span>Apply it</h3>
+              <p id="sl-apply-question" class="cl-apply-question"></p>
+              <div class="cl-options" id="sl-apply-options" role="group" aria-label="Answers"></div>
+              <div class="cl-result" id="sl-apply-result" aria-live="polite" hidden></div>
+              <div class="sl-row sl-spaced" id="sl-case-end" hidden>
+                <a class="cl-link" id="sl-lesson-link" href="../knowledge-map/">Review the related lesson</a>
+                <button type="button" class="sl-btn sl-btn-main" id="sl-next-case">
+                  Next case<i data-lucide="arrow-right" aria-hidden="true"></i>
                 </button>
-                <a class="sl-small" id="sl-lesson-link" href="../knowledge-map/">Review the lesson</a>
               </div>
-            </div>
+            </section>
 
-            <div id="sl-next-question" hidden>
-              <div class="sl-message" id="sl-followup-prompt"></div>
-              <label for="sl-followup">3 · Your answer to the related task</label>
-              <textarea id="sl-followup" placeholder="Write your answer here."></textarea>
-              <button type="button" class="sl-btn sl-spaced" id="sl-next-case">
-                Next case<i data-lucide="arrow-right" aria-hidden="true"> </i>
-              </button>
+            <div class="cl-footer">
+              <button type="button" class="sl-text-button" id="sl-reset">Start this case again</button>
             </div>
-          </div>
-          <p class="sl-small sl-spaced">
-            The team's separate correction prototype:
+          </article>
+
+          <p class="cl-note sl-spaced">
+            Cases are written by the team from the course lectures. Stars come from the line and choice
+            questions only.
             <a
               href="https://sonic-fiddle-gzb7c64.vercel.app/bureau.html"
               target="_blank"
               rel="noopener noreferrer"
-              >Open Code Review Bureau <span aria-hidden="true">↗</span></a
+              >Open the Code Review Bureau prototype <span aria-hidden="true">↗</span></a
             >
           </p>
         </main>

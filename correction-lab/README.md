@@ -2,25 +2,42 @@
 
 Work mainly in this folder.
 
-- `index.html`: page layout, answer fields and reference panel.
-- `cases.js`: authored cases. Each has code, a transcript or a message to review, a reference explanation, evidence or a better version, acceptance criteria and a related task.
-- `script.js`: case switching, per-case drafts, reveal state, self-check and follow-up answers.
-- `style.css`: styles unique to this module.
+- `index.html`: page layout and the four steps of a case.
+- `cases.js`: authored cases, based on the COMP5241 lectures.
+- `script.js`: case switching, line flagging, multiple-choice feedback, stars and saved progress.
+- `style.css`: styles unique to this module, including its larger system-font type.
 
-Open `/correction-lab/`, or `/correction-lab/?case=password-boundary` to open one case. Unknown case IDs fall back to the first case.
+Open `/correction-lab/`, or `/correction-lab/?case=agent-edits-test` to open one case. Unknown case IDs fall back to the first case.
 
-Cases follow the course topics in the project brief:
+## How a case works
 
-- **Software fundamentals**: edge cases, requirements versus code, tests that prove nothing.
-- **AI coding agents**: a vague request (Description), an agent that edits a test to hide a bug (Discernment), an API key shipped to the browser (Diligence). The related task in the test case asks what to delegate (Delegation). These follow Anthropic's AI Fluency 4D framework.
-- **Soft and product skills**: a vague status update, a user story with no real user, a harsh review comment.
+Each case shows a question and an AI answer split into numbered lines.
 
-Each case follows four steps: describe the problem and a fix, open the reference explanation, tick the acceptance criteria your answer covers, and answer a related task. Explanations and evidence are written by hand. Nothing is executed and answers are not auto-scored; the criteria are a self-check.
+1. **Spot the problem**: tap the wrong lines, then check. Each marked line shows a note.
+2. **Why is it wrong?**: choose the cause. Wrong choices explain why and can be retried.
+3. **Fix it**: write a fix, then compare it with a reference answer and tick the criteria it covers.
+4. **Apply it**: answer a related question to finish the case.
 
-State uses the `correction` key. The top-level `{draft, revealed, nextSeen, caseId}` describe the open case and `cases` stores progress for every case. See [data contracts](../docs/DATA-CONTRACTS.md). Older saves with only the top-level fields are moved into `cases` on load.
+Steps 1, 2 and 4 are checked against the authored answer key and give up to three stars when right first time. The written fix in step 3 is not scored; the ticks are a self-check. Nothing calls an AI service or runs code.
 
-To add a case, append an object to `cases.js` with a new stable `id`, a `topic` and a shared concept ID. Optional fields: `fluency`, `format: 'text'` for prose, and `reference.label` to rename "Evidence". Ask a teammate to review the explanation before merging.
+## Cases
 
-The page links to the team's [Code Review Bureau prototype](https://sonic-fiddle-gzb7c64.vercel.app/bureau.html). Its source code is separate and has not been imported. When the source is available, integrate its cases here while preserving shared navigation and agreed data contracts.
+| Topic | Cases | Lecture |
+| --- | --- | --- |
+| Software engineering fundamentals | untestable requirements, a test with no assertion, wrong expectations for negative tests, verification versus validation | SDLC, Software testing |
+| Effective use of AI coding agents | a big-bang request (Description), an agent editing a test to pass (Discernment, Delegation), an API key in browser code (Diligence) | AI in software development, AI-assisted practices |
+| Soft and product skills | force-push advice, a story that is not Done, a user story with no user | Version control, Agile, Scrum |
 
-Check empty-answer validation, saving a draft, switching cases, revealing the explanation, ticking criteria, the related task, clearing a case, reload persistence, the lesson link and the external demo link. See [team tasks](../docs/MODULE-TASKS.md).
+The AI Fluency labels follow Anthropic's 4D framework mentioned in the project brief.
+
+## Adding a case
+
+Append an object to `cases.js` with a new stable `id`, a `topic` and a shared concept ID. Line indexes in `flaws`, `related` and `notes` are 0-based. `related` lines are acceptable to flag but are not required. Ask a teammate to review the explanation before merging.
+
+## Saved state
+
+State uses the `correction` key. The top-level `{draft, revealed, nextSeen, caseId}` describe the open case and `cases` stores progress for every case. See [data contracts](../docs/DATA-CONTRACTS.md).
+
+The page links to the team's [Code Review Bureau prototype](https://sonic-fiddle-gzb7c64.vercel.app/bureau.html). Its source code is separate and has not been imported.
+
+Check line flagging and the empty-selection message, wrong and right choices, the empty-fix message, the reference and ticks, the apply question, starting a case again, reload persistence, the lesson link and phone layout. See [team tasks](../docs/MODULE-TASKS.md).
