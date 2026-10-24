@@ -155,7 +155,11 @@
                   <div class="iv-dialogue" aria-live="polite" aria-atomic="true">
                     <p class="iv-speaker">MAYA</p>
                     <p id="iv-ack" class="iv-ack"></p>
-                    <div id="iv-feedback" class="iv-turn-feedback" hidden>
+                    <div id="iv-feedback" class="iv-turn-feedback iv-ai-block" hidden>
+                      <div class="iv-source-label">
+                        <i data-lucide="sparkles" aria-hidden="true"></i
+                        ><span id="iv-feedback-source">AI feedback</span>
+                      </div>
                       <p id="iv-feedback-observation"></p>
                       <p id="iv-feedback-suggestion"></p>
                     </div>
@@ -189,9 +193,7 @@
                       </button>
                     </div>
                   </div>
-                  <p id="iv-room-note" class="iv-room-note">
-                    A short text interview. Choose a reply or use your own words.
-                  </p>
+                  <p id="iv-room-note" class="iv-room-note">Type a reply, or start with a hint.</p>
                 </div>
               </div>
               <div class="iv-room-footer">
@@ -204,67 +206,70 @@
             <section id="iv-review" hidden aria-labelledby="iv-review-title">
               <header class="iv-review-heading">
                 <div>
-                  <p class="iv-eyebrow">AFTER THE CONVERSATION</p>
-                  <h1 id="iv-review-title" tabindex="-1">One step better.</h1>
-                  <p id="iv-review-summary"></p>
+                  <h1 id="iv-review-title" tabindex="-1">Review your answers</h1>
                 </div>
               </header>
               <div class="iv-review-layout">
-                <div>
+                <section
+                  id="iv-review-feedback"
+                  class="iv-ai-block"
+                  aria-labelledby="iv-feedback-title"
+                >
                   <div class="iv-section-heading">
-                    <h2 id="iv-feedback-title">Your feedback</h2>
+                    <div class="iv-source-label">
+                      <i data-lucide="sparkles" aria-hidden="true"></i>
+                      <h2 id="iv-feedback-title">AI review</h2>
+                    </div>
                     <button id="iv-review-retry" type="button" class="iv-text-button" hidden>
                       Retry analysis
                     </button>
                   </div>
+                  <p id="iv-review-summary"></p>
                   <div id="iv-highlights"></div>
                   <div class="iv-next-practice">
                     <i data-lucide="route" aria-hidden="true"></i>
                     <div>
-                      <h2>Try this next</h2>
+                      <h2>Next step</h2>
                       <p id="iv-next-practice"></p>
                       <a id="iv-lesson" href="../knowledge-map/" class="iv-text-button"
-                        >Review the related lesson
-                        <i data-lucide="arrow-up-right" aria-hidden="true"></i
+                        >Open lesson <i data-lucide="arrow-up-right" aria-hidden="true"></i
                       ></a>
                     </div>
                   </div>
-                </div>
+                </section>
                 <section class="iv-improve" aria-labelledby="iv-improve-title">
-                  <p class="iv-eyebrow">YOUR NEXT VERSION</p>
-                  <h2 id="iv-improve-title">Make one answer stronger.</h2>
+                  <h2 id="iv-improve-title">Improve your answer</h2>
                   <label for="iv-improve-select" class="iv-sr-only">Choose an answer</label
                   ><select id="iv-improve-select"></select>
                   <p id="iv-original" class="iv-original"></p>
                   <button id="iv-suggest" type="button" class="iv-text-button">
-                    <i data-lucide="sparkles" aria-hidden="true"></i>See an AI suggestion
+                    <i data-lucide="sparkles" aria-hidden="true"></i>AI rewrite
                   </button>
                   <div id="iv-suggestion" class="iv-suggestion" hidden></div>
                   <form id="iv-revise-form">
-                    <label for="iv-revision">Your version</label
+                    <label for="iv-revision">Your rewrite</label
                     ><textarea id="iv-revision" rows="4" maxlength="1500" required></textarea
                     ><button type="submit" class="iv-button iv-primary">
-                      Save my version <i data-lucide="check" aria-hidden="true"></i>
+                      Save rewrite <i data-lucide="check" aria-hidden="true"></i>
                     </button>
                   </form>
                   <button id="iv-compare" type="button" class="iv-text-button" hidden>
-                    Analyse what changed <i data-lucide="git-compare-arrows" aria-hidden="true"></i>
+                    Compare with original
+                    <i data-lucide="git-compare-arrows" aria-hidden="true"></i>
                   </button>
                   <div id="iv-comparison" class="iv-comparison" hidden></div>
                   <p id="iv-improve-status" class="iv-small" role="status"></p>
                 </section>
               </div>
               <details class="iv-transcript">
-                <summary>
-                  Full conversation & revisions <span id="iv-transcript-count"></span>
-                </summary>
+                <summary>Conversation & rewrites <span id="iv-transcript-count"></span></summary>
                 <div id="iv-transcript"></div>
               </details>
               <div class="iv-review-actions">
                 <button id="iv-export" class="iv-text-button" type="button">
                   <i data-lucide="download" aria-hidden="true"></i>Download record</button
                 ><button id="iv-again" class="iv-button iv-secondary" type="button">
-                  Another conversation <i data-lucide="arrow-right" aria-hidden="true"></i></button
+                  New interview <i data-lucide="arrow-right" aria-hidden="true"></i></button
                 ><button id="iv-home" type="button" class="iv-button iv-primary">
                   Done <i data-lucide="check" aria-hidden="true"></i>
                 </button>
@@ -275,8 +280,7 @@
             <dialog id="iv-history" aria-labelledby="iv-history-title">
               <div class="iv-section-heading">
                 <div>
-                  <p class="iv-eyebrow">YOUR NOTEBOOK</p>
-                  <h2 id="iv-history-title">Past conversations</h2>
+                  <h2 id="iv-history-title">Past interviews</h2>
                 </div>
                 <button
                   id="iv-history-close"
@@ -296,7 +300,7 @@
             </dialog>
             <dialog id="iv-log" aria-labelledby="iv-log-title">
               <div class="iv-section-heading">
-                <h2 id="iv-log-title">The conversation so far</h2>
+                <h2 id="iv-log-title">Conversation</h2>
                 <button
                   id="iv-log-close"
                   class="iv-icon-button"
@@ -310,7 +314,7 @@
             </dialog>
             <dialog id="iv-ideas" aria-labelledby="iv-choice-label">
               <div class="iv-section-heading">
-                <h2 id="iv-choice-label">A place to start</h2>
+                <h2 id="iv-choice-label">Reply starters</h2>
                 <button
                   id="iv-ideas-close"
                   class="iv-icon-button"
@@ -320,15 +324,13 @@
                   <i data-lucide="x" aria-hidden="true"></i>
                 </button>
               </div>
-              <p class="iv-small">
-                Add an idea to the input box, then make it your own. Nothing is sent yet.
-              </p>
+              <p class="iv-small">Adds to your draft. You choose when to send.</p>
               <div id="iv-choices" class="iv-choices"></div>
               <p id="iv-ideas-status" class="iv-small" role="status"></p>
             </dialog>
             <dialog id="iv-scenarios" aria-labelledby="iv-scenarios-title">
               <div class="iv-section-heading">
-                <h2 id="iv-scenarios-title">Choose a conversation</h2>
+                <h2 id="iv-scenarios-title">Choose a topic</h2>
                 <button
                   id="iv-scenarios-close"
                   class="iv-icon-button"
@@ -338,7 +340,7 @@
                   <i data-lucide="x" aria-hidden="true"></i>
                 </button>
               </div>
-              <p class="iv-small">Your current conversation stays in History.</p>
+              <p class="iv-small">Current interview saved in History.</p>
               <div id="iv-scenario-list" class="iv-choices"></div>
             </dialog>
           </div>

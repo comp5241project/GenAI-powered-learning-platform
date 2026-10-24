@@ -359,7 +359,7 @@
   function demoReview(session) {
     const t = topic(session.topicId);
     return {
-      summary: 'Your conversation is saved. These are practice prompts, not an AI assessment.',
+      summary: 'Interview saved. Choose an answer to improve.',
       nextStep: t.nextStep,
       highlights: [
         {

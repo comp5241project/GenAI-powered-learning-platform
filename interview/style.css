@@ -396,11 +396,9 @@
   margin-bottom: 18px;
 }
 #interview-app .iv-highlight {
-  padding: 20px;
-  margin-bottom: 13px;
-  border: 1px solid var(--sl-line);
-  border-radius: 13px;
-  background: white;
+  padding: 17px 0;
+  margin: 0;
+  border-bottom: 1px solid #dce0d2;
 }
 #interview-app .iv-highlight-head {
   display: flex;
@@ -452,7 +450,7 @@
   padding: 25px;
   border: 1px solid #ded6c5;
   border-radius: 16px;
-  background: #f0ece2;
+  background: white;
 }
 #interview-app .iv-improve select {
   font-size: 12px;
@@ -462,6 +460,9 @@
   font-size: 12px;
   color: #827763;
   overflow-wrap: anywhere;
+  background: #f6f5f0;
+  padding: 12px;
+  border-radius: 8px;
 }
 #interview-app .iv-improve form label {
   display: block;
@@ -474,12 +475,8 @@
 }
 #interview-app .iv-suggestion,
 #interview-app .iv-comparison {
-  border-left: 2px solid #ad9662;
-  padding: 11px 13px;
-  background: #faf7ed;
   font-size: 12px;
   line-height: 1.7;
-  border-radius: 0 9px 9px 0;
   overflow-wrap: anywhere;
 }
 #interview-app .iv-suggestion p,
@@ -746,8 +743,6 @@
   font-size: 12px;
   color: #686950;
   margin-bottom: 15px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #dbd7c8;
 }
 #interview-app .iv-turn-feedback p {
   margin: 0 0 5px;
@@ -770,6 +765,58 @@
 }
 #interview-app .iv-toolbar-actions {
   gap: 16px;
+}
+#interview-app .iv-ai-block {
+  border: 1px solid #d4ddc8;
+  border-radius: 12px;
+  background: #f3f6ee;
+  padding: 15px;
+}
+#interview-app .iv-ai-block.is-sample {
+  border-color: #e1d8c6;
+  background: #faf7ef;
+}
+#interview-app .iv-source-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+  color: #62734d;
+  font-size: 11px;
+  font-weight: 600;
+}
+#interview-app .is-sample .iv-source-label {
+  color: #8a7550;
+}
+#interview-app .iv-source-label svg {
+  width: 16px;
+  height: 16px;
+}
+#interview-app .iv-source-label h2 {
+  font-size: 12px;
+  letter-spacing: 0;
+}
+#interview-app #iv-review-feedback {
+  padding: 23px;
+}
+#interview-app #iv-review-feedback > .iv-section-heading {
+  margin-bottom: 0;
+}
+#interview-app #iv-review-summary {
+  margin: 4px 0 0;
+  line-height: 1.7;
+}
+#interview-app .iv-next-practice {
+  padding-bottom: 0;
+}
+#interview-app .iv-why summary {
+  font-size: 11px;
+  color: var(--sl-sub);
+  padding: 7px 0;
+}
+#interview-app .iv-why p {
+  color: var(--sl-sub);
+  font-size: 11px;
 }
 @media (max-width: 520px) {
   #interview-app .iv-brand > span,

@@ -37,6 +37,16 @@
     item.addEventListener('click', action);
     return item;
   }
+  function sourceLabel(title) {
+    const label = node('div', 'iv-source-label');
+    label.append(icon('sparkles'), node('span', '', title));
+    return label;
+  }
+  function sourceBlock(target, title) {
+    target.classList.add('iv-ai-block');
+    target.classList.toggle('is-sample', session.mode !== 'ai');
+    target.replaceChildren(sourceLabel(title));
+  }
   function save() {
     app.write('interviewStory', state);
   }
@@ -48,8 +58,8 @@
     $('#iv-mode').textContent = live ? 'Live AI' : 'Demo conversation';
     $('#iv-mode').classList.toggle('is-live', live);
     $('#iv-room-note').textContent = live
-      ? 'Type your reply. Reply ideas can help you get started.'
-      : 'Scripted demo · live AI is not connected.';
+      ? 'Type a reply, or start with a hint.'
+      : 'Demo · preset questions.';
     $('#iv-save-status').textContent = storage
       ? 'Saved in this browser'
       : 'Saved for this visit only';
@@ -180,6 +190,8 @@
     ][session.turns.length];
     $('#iv-ack').textContent = turn.acknowledgement;
     $('#iv-feedback').hidden = !turn.feedback?.observation;
+    $('#iv-feedback').classList.toggle('is-sample', session.mode !== 'ai');
+    $('#iv-feedback-source').textContent = session.mode === 'ai' ? 'AI feedback' : 'Sample note';
     $('#iv-feedback-observation').textContent = turn.feedback?.observation || '';
     $('#iv-feedback-suggestion').textContent = turn.feedback?.suggestion
       ? 'Try: ' + turn.feedback.suggestion
@@ -189,7 +201,7 @@
     $('#iv-last-answer').textContent = session.turns.length
       ? 'You: ' + session.turns.at(-1).answer
       : '';
-    $('#iv-choice-label').textContent = 'A place to start';
+    $('#iv-choice-label').textContent = 'Reply starters';
     $('#iv-choices').hidden = false;
     $('#iv-choices').replaceChildren();
     turn.choices.forEach((choice, index) =>
@@ -282,14 +294,15 @@
         node('h3', '', index + 1 + '. Maya: ' + turn.question),
         node('p', '', 'You: ' + turn.answer)
       );
-      if (turn.feedback)
-        item.append(
-          node(
-            'p',
-            'iv-turn-feedback',
-            'Feedback: ' + turn.feedback.observation + '\nTry: ' + turn.feedback.suggestion
-          )
+      if (turn.feedback) {
+        const feedback = node('div', 'iv-turn-feedback');
+        sourceBlock(feedback, session.mode === 'ai' ? 'AI feedback' : 'Sample note');
+        feedback.append(
+          node('p', '', turn.feedback.observation),
+          node('p', '', 'Try: ' + turn.feedback.suggestion)
         );
+        item.append(feedback);
+      }
       for (const [version, revision] of turn.revisions.entries())
         item.append(
           node(
@@ -304,20 +317,20 @@
         );
       target.append(item);
     });
+    app.icons();
   }
   async function review() {
     $('#iv-error').hidden = true;
-    $('#iv-review-summary').textContent =
-      session.review?.summary || 'Your conversation is saved. Preparing your review…';
+    $('#iv-review-summary').textContent = session.review?.summary || 'Preparing your review…';
     $('#iv-highlights').replaceChildren();
     $('#iv-next-practice').textContent = '';
     $('#iv-review-retry').hidden = true;
-    $('#iv-feedback-title').textContent =
-      session.mode === 'ai' ? 'From the conversation' : 'Reflection prompts';
+    $('#iv-feedback-title').textContent = session.mode === 'ai' ? 'AI review' : 'Sample review';
+    $('#iv-review-feedback').classList.toggle('is-sample', session.mode !== 'ai');
     $('#iv-review-source').textContent =
       session.mode === 'ai'
-        ? 'AI feedback on the original conversation. Suggestions are examples; saved revisions stay separate.'
-        : 'Demo reflection prompts and example rewrites are authored. They are not a personalised AI assessment.';
+        ? 'AI feedback · Original answers kept.'
+        : 'Sample content · AI is not connected.';
     $('#iv-lesson').href =
       legacyModel.safeReturnPath(session.context.returnTo) ||
       '../knowledge-map/?topic=' + encodeURIComponent(session.context.conceptId);
@@ -373,7 +386,7 @@
         node('blockquote', '', '“' + item.quote + '”'),
         node('p', '', item.advice),
         button(
-          'Revisit answer ' + (item.turn + 1),
+          'Edit answer ' + (item.turn + 1),
           () => {
             $('#iv-improve-select').value = item.turn;
             renderEditor();
@@ -392,16 +405,14 @@
     const turn = session.turns[index];
     const draft = session.revisionDrafts[index];
     assisted = draft?.assisted ?? turn.revisions.at(-1)?.assisted ?? false;
-    $('#iv-original').textContent = 'You said: ' + turn.answer;
+    $('#iv-original').textContent = 'Original: ' + turn.answer;
     $('#iv-revision').value = draft?.text ?? turn.revisions.at(-1)?.text ?? turn.answer;
     $('#iv-suggestion').hidden = true;
     $('#iv-suggestion').replaceChildren();
     $('#iv-improve-status').textContent = '';
     $('#iv-suggest').replaceChildren(
-      icon('sparkles'),
-      document.createTextNode(
-        session.mode === 'ai' ? 'See an AI suggestion' : 'See a scenario example'
-      )
+      icon(session.mode === 'ai' ? 'sparkles' : 'notebook-pen'),
+      document.createTextNode(session.mode === 'ai' ? 'AI rewrite' : 'Show example')
     );
     $('#iv-compare').hidden = !turn.revisions.length || session.mode !== 'ai';
     $('#iv-comparison').hidden = true;
@@ -411,14 +422,15 @@
   }
   function showSuggestion(result) {
     const target = $('#iv-suggestion');
-    target.replaceChildren();
+    sourceBlock(target, session.mode === 'ai' ? 'AI rewrite' : 'Sample rewrite');
     target.hidden = false;
+    const reason = node('details', 'iv-why');
+    reason.append(node('summary', '', 'Why'), node('p', '', result.reason));
     target.append(
-      node('strong', '', session.mode === 'ai' ? 'AI suggestion' : 'Example for this scenario'),
       node('p', '', result.suggestion),
-      node('p', 'iv-small', result.reason),
+      reason,
       button(
-        'Use as a starting point',
+        'Use this draft',
         () => {
           $('#iv-revision').value = result.suggestion;
           assisted = true;
@@ -442,7 +454,7 @@
           ? await ask('rewrite', index)
           : {
               suggestion: story.topic(session.topicId).example,
-              reason: 'An authored example. Add details that fit your own reasoning.',
+              reason: 'Sample only. Add your own reasoning.',
             };
       session.suggestions[index] = result;
       save();
@@ -456,11 +468,10 @@
   }
   function showComparison(result) {
     const target = $('#iv-comparison');
-    target.replaceChildren(
-      node('p', '', result.improved),
-      node('p', '', 'Next: ' + result.nextStep)
-    );
+    sourceBlock(target, 'AI comparison');
+    target.append(node('p', '', result.improved), node('p', '', 'Next: ' + result.nextStep));
     target.hidden = false;
+    app.icons();
   }
   async function compare() {
     const index = Number($('#iv-improve-select').value);
@@ -601,9 +612,7 @@
     save();
     $('#iv-compare').hidden = true;
     $('#iv-comparison').hidden = true;
-    $('#iv-improve-status').textContent = storage
-      ? 'Draft saved. Save your version when ready.'
-      : 'Draft kept for this visit.';
+    $('#iv-improve-status').textContent = storage ? 'Draft saved' : 'Draft kept for this visit.';
   }
   $('#iv-revision').addEventListener('input', saveRevisionDraft);
   $('#iv-revise-form').addEventListener('submit', (event) => {
@@ -617,8 +626,8 @@
         renderTranscript($('#iv-transcript'));
       }
       $('#iv-improve-status').textContent = changed
-        ? 'Version saved. Your original answer is preserved.'
-        : 'No changes yet. Try adding a reason or an example.';
+        ? 'Rewrite saved. Original kept.'
+        : 'No changes yet.';
       $('#iv-compare').hidden = !session.turns[index].revisions.length || session.mode !== 'ai';
       $('#iv-comparison').hidden = true;
     } catch (error) {
