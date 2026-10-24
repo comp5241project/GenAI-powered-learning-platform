@@ -792,6 +792,12 @@
   width: 16px;
   height: 16px;
 }
+#interview-app .iv-ai-block .iv-sample-note {
+  color: var(--sl-sub);
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 0 0 10px;
+}
 #interview-app .iv-source-label h2 {
   font-size: 12px;
   letter-spacing: 0;

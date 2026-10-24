@@ -6,7 +6,7 @@ After each reply, the AI returns a brief observation, one suggestion and a follo
 
 Without AI configuration, an explicitly labelled demo runs locally with four authored questions, practice notes and scenario examples. Its notes are not an assessment of the student. Demo sessions stay demos; failed AI calls do not silently switch modes.
 
-AI notes, review, rewrite suggestions and comparisons use a shared bordered card with a line icon and source label. Authored content is labelled Sample. The learner's original and rewrite stay in a separate editor. Actions use short labels: Edit answer, AI rewrite, Save rewrite and Compare with original; rewrite explanations expand under Why.
+AI notes, review, rewrite suggestions and comparisons use a shared bordered card with a line icon and an AI label. Demo content includes “(Sample — API not connected yet)” to show where AI will be connected. The learner's original and rewrite stay in a separate editor. Actions use short labels: Edit answer, AI rewrite, Save rewrite and Compare with original; rewrite explanations expand under Why.
 
 ## Run
 

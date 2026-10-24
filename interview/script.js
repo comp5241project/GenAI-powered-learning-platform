@@ -46,6 +46,8 @@
     target.classList.add('iv-ai-block');
     target.classList.toggle('is-sample', session.mode !== 'ai');
     target.replaceChildren(sourceLabel(title));
+    if (session.mode !== 'ai')
+      target.append(node('p', 'iv-sample-note', '(Sample — API not connected yet)'));
   }
   function save() {
     app.write('interviewStory', state);
@@ -191,7 +193,8 @@
     $('#iv-ack').textContent = turn.acknowledgement;
     $('#iv-feedback').hidden = !turn.feedback?.observation;
     $('#iv-feedback').classList.toggle('is-sample', session.mode !== 'ai');
-    $('#iv-feedback-source').textContent = session.mode === 'ai' ? 'AI feedback' : 'Sample note';
+    $('#iv-feedback-source').textContent = 'AI feedback';
+    $('#iv-feedback-sample').hidden = session.mode === 'ai';
     $('#iv-feedback-observation').textContent = turn.feedback?.observation || '';
     $('#iv-feedback-suggestion').textContent = turn.feedback?.suggestion
       ? 'Try: ' + turn.feedback.suggestion
@@ -296,7 +299,7 @@
       );
       if (turn.feedback) {
         const feedback = node('div', 'iv-turn-feedback');
-        sourceBlock(feedback, session.mode === 'ai' ? 'AI feedback' : 'Sample note');
+        sourceBlock(feedback, 'AI feedback');
         feedback.append(
           node('p', '', turn.feedback.observation),
           node('p', '', 'Try: ' + turn.feedback.suggestion)
@@ -325,12 +328,12 @@
     $('#iv-highlights').replaceChildren();
     $('#iv-next-practice').textContent = '';
     $('#iv-review-retry').hidden = true;
-    $('#iv-feedback-title').textContent = session.mode === 'ai' ? 'AI review' : 'Sample review';
+    $('#iv-feedback-title').textContent = 'AI review';
     $('#iv-review-feedback').classList.toggle('is-sample', session.mode !== 'ai');
     $('#iv-review-source').textContent =
       session.mode === 'ai'
         ? 'AI feedback · Original answers kept.'
-        : 'Sample content · AI is not connected.';
+        : '(Sample — API not connected yet)';
     $('#iv-lesson').href =
       legacyModel.safeReturnPath(session.context.returnTo) ||
       '../knowledge-map/?topic=' + encodeURIComponent(session.context.conceptId);
@@ -410,10 +413,7 @@
     $('#iv-suggestion').hidden = true;
     $('#iv-suggestion').replaceChildren();
     $('#iv-improve-status').textContent = '';
-    $('#iv-suggest').replaceChildren(
-      icon(session.mode === 'ai' ? 'sparkles' : 'notebook-pen'),
-      document.createTextNode(session.mode === 'ai' ? 'AI rewrite' : 'Show example')
-    );
+    $('#iv-suggest').replaceChildren(icon('sparkles'), document.createTextNode('AI rewrite'));
     $('#iv-compare').hidden = !turn.revisions.length || session.mode !== 'ai';
     $('#iv-comparison').hidden = true;
     if (session.comparisons[index] && !draft) showComparison(session.comparisons[index]);
@@ -422,7 +422,7 @@
   }
   function showSuggestion(result) {
     const target = $('#iv-suggestion');
-    sourceBlock(target, session.mode === 'ai' ? 'AI rewrite' : 'Sample rewrite');
+    sourceBlock(target, 'AI rewrite');
     target.hidden = false;
     const reason = node('details', 'iv-why');
     reason.append(node('summary', '', 'Why'), node('p', '', result.reason));
