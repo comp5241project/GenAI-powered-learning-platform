@@ -36,4 +36,5 @@ test('all task panels exist and list editors start collapsed', () => {
   for (const view of views) assert.match(html, new RegExp(`data-studio-view="${view}"`));
   for (const view of ['relationships', 'questions', 'cases'])
     assert.match(html, new RegExp(`data-new-editor="${view}"[\\s\\S]*?<form id="teacher-`));
+  assert.match(html, /id="teacher-learning-view"[^>]*hidden/);
 });

@@ -62,6 +62,7 @@
 #skillloop-prototype .kn-related { border-top:1px solid var(--sl-line); margin-top:16px; padding-top:12px; }
 #skillloop-prototype #teacher-related-links { display:flex; flex-wrap:wrap; gap:8px; }
 #skillloop-prototype #teacher-review #teacher-meta { display:grid; gap:8px; max-width:650px; }
+#skillloop-prototype #teacher-learning-view[hidden] { display:none; }
 #skillloop-prototype .kn-task-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:14px 0; }
 #skillloop-prototype .kn-task-toolbar p { margin:0; }
 #skillloop-prototype .kn-detail-editor { margin-top:18px; padding:16px; border:1px solid var(--sl-line); border-radius:10px; background:var(--sl-panel); }

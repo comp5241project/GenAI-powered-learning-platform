@@ -118,6 +118,8 @@
   }
   function renderShareLink() {
     const share = $('#teacher-share');
+    const learningView = $('#teacher-learning-view');
+    learningView.hidden = true;
     if (!graphId) {
       share.textContent = 'Create a graph to get a share link.';
       return;
@@ -128,6 +130,8 @@
       return;
     }
     const url = new URL(K.href('graph', { graph: graphId }), location.origin);
+    learningView.href = url.href;
+    learningView.hidden = false;
     share.replaceChildren(document.createTextNode('Published share link: '));
     const anchor = K.make('a', '', url.href); anchor.href = url.href; share.append(anchor);
     const learning = K.make('a', 'sl-btn', 'Open published Learning View');
