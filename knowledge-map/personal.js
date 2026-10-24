@@ -1,14 +1,8 @@
 (async function () {
   const K = window.KnowledgeNetwork;
   const $ = K.$;
-  const params = new URLSearchParams(location.search);
-  if (params.has('topic')) {
-    location.replace(K.href('concept', { topic: params.get('topic') }));
-    return;
-  }
   let signedIn = false;
-  let localData = K.local();
-  let data = localData;
+  let data = { nodes: [], edges: [] };
   let selectedId = null;
   let selectedRelationshipId = null;
   let teacherEdges = [];
@@ -27,6 +21,9 @@
   const canvas = new K.Canvas($('#kn-canvas'), { editable: true, onSelect: select,
     onSelectEdge: selectRelationship, onMove: move });
   function status(message) { $('#kn-account-state').textContent = message; }
+  function writeError(error, message = error.message) {
+    status(error.status === 401 ? 'Your session expired. Sign in again to open your account network.' : message);
+  }
   const savePosition = window.SkillLoopPositionWrites.create(
     (id, position) => K.api('personal-position', 'POST', { id, ...position }),
     (id, position) => {
@@ -137,14 +134,13 @@
       save.disabled = cancel.disabled = textarea.disabled = true;
       pendingWrites += 1;
       try {
-        if (signedIn) await K.api(node.kind === 'note' ? 'personal-note' : 'note', 'POST', node.kind === 'note'
+        await K.api(node.kind === 'note' ? 'personal-note' : 'note', 'POST', node.kind === 'note'
           ? { id: node.id, title: node.title, body: value, x: node.x, y: node.y }
           : { graphId: node.graphId, conceptId: node.conceptId, note: value });
         node[field] = value;
-        const persisted = signedIn || K.saveLocal(data);
         noteDrafts.delete(node.id);
-        status(persisted ? 'Note saved.' : 'Note is visible on this page only; reload or navigation will lose it because browser storage is unavailable.');
-      } catch (error) { status(`Note not saved: ${error.message}. Your text is still here; retry or Cancel.`); }
+        status('Note saved to your account.');
+      } catch (error) { writeError(error, `Note not saved: ${error.message}. Your text is still here; retry or Cancel.`); }
       finally { pendingWrites -= 1; textarea.disabled = false; updateButtons(); }
     });
     cancel.addEventListener('click', () => {
@@ -157,7 +153,7 @@
     remove.addEventListener('click', async () => {
       if (!window.confirm(`Remove ${title(node)} and its personal connections?`)) return;
       try {
-        if (signedIn) await K.api(node.kind === 'note' ? 'remove-personal-note' : 'unreference', 'POST',
+        await K.api(node.kind === 'note' ? 'remove-personal-note' : 'unreference', 'POST',
           node.kind === 'note' ? { id: node.id } : { graphId: node.graphId, conceptId: node.conceptId });
         data.nodes = data.nodes.filter((item) => item.id !== node.id);
         noteDrafts.delete(node.id);
@@ -165,11 +161,10 @@
           if (edge.source === node.id || edge.target === node.id) connectionDrafts.delete(edge.id);
         }
         data.edges = data.edges.filter((edge) => edge.source !== node.id && edge.target !== node.id);
-        const persisted = signedIn || K.saveLocal(data);
         teacherEdges = teacherEdges.filter((edge) => edge.source !== node.id && edge.target !== node.id);
         render();
-        if (!persisted) status('Removal is visible on this page only; reload may restore the node because browser storage is unavailable.');
-      } catch (error) { status(error.message); }
+        status('Node removed from your account.');
+      } catch (error) { writeError(error); }
     });
     box.append(remove);
     if (data.nodes.length > 1) {
@@ -236,13 +231,12 @@
         try {
           const reason = input.value.trim();
           if (!reason) { status('Enter a connection reason.'); return; }
-          if (signedIn) await K.api('update-personal-edge', 'POST', { id: edge.id, reason });
+          await K.api('update-personal-edge', 'POST', { id: edge.id, reason });
           edge.reason = reason;
-          const persisted = signedIn || K.saveLocal(data);
           connectionDrafts.delete(edge.id);
           render();
-          status(persisted ? 'Connection reason saved.' : 'Reason is visible on this page only; reload or navigation will lose it because browser storage is unavailable.');
-        } catch (error) { status(`Connection reason not saved: ${error.message}`); }
+          status('Connection reason saved to your account.');
+        } catch (error) { writeError(error, `Connection reason not saved: ${error.message}`); }
         finally { pendingWrites -= 1; input.disabled = false; updateButtons(); }
       });
       cancel.addEventListener('click', () => {
@@ -253,12 +247,11 @@
       remove.addEventListener('click', async () => {
         if (!window.confirm('Remove this personal connection?')) return;
         try {
-          if (signedIn) await K.api('remove-personal-edge', 'POST', { id: edge.id });
+          await K.api('remove-personal-edge', 'POST', { id: edge.id });
           data.edges = data.edges.filter((item) => item.id !== edge.id);
           connectionDrafts.delete(edge.id);
-          if (!signedIn && !K.saveLocal(data)) status('Removal is visible on this page only; reload may restore the connection because browser storage is unavailable.');
           selectedRelationshipId = null; render();
-        } catch (error) { status(`Connection was not removed: ${error.message}`); }
+        } catch (error) { writeError(error, `Connection was not removed: ${error.message}`); }
       });
       box.append(form, remove);
     }
@@ -270,7 +263,7 @@
     if (target.x === previous.x && target.y === previous.y) return;
     const stored = data.nodes.find((item) => item.id === node.id);
     if (stored) Object.assign(stored, target);
-    if (!signedIn) { if (!K.saveLocal(data)) status('Position is visible on this page only; reload or navigation will lose it because browser storage is unavailable.'); return; }
+    if (!signedIn) return;
     pendingWrites += 1;
     try { await savePosition(node.id, previous, target); }
     finally { pendingWrites -= 1; }
@@ -282,14 +275,32 @@
     render();
   }
   window.addEventListener('beforeunload', (event) => {
+    if (window.KnowledgeSigningOut) return;
     if (!noteDrafts.size && !connectionDrafts.size && !hasCreationDraft() && !pendingWrites) return;
     event.preventDefault(); event.returnValue = '';
+  });
+  window.KnowledgeBeforeSignOut = async () => {
+    if (pendingWrites) { status('Wait for the account save to finish before signing out.'); return false; }
+    return !noteDrafts.size && !connectionDrafts.size && !hasCreationDraft() ||
+      window.confirm('Discard unsaved personal changes and sign out?');
+  };
+  document.addEventListener('knowledge-auth-expired', () => {
+    signedIn = false;
+    data = { nodes: [], edges: [] }; teacherEdges = [];
+    $('#kn-graph-section').hidden = true;
+    $('#kn-context-section').hidden = true;
+    $('#kn-add-section').hidden = true;
+    $('#kn-empty').hidden = false;
+    $('#kn-create-first').hidden = true;
+    $('#kn-sign-in').hidden = false;
+    status('Your session expired. Sign in again to open your account network.');
   });
   $('#kn-create-first').addEventListener('click', () => {
     delete $('#kn-add-edge').dataset.pickingTarget;
     adding = true; $('#kn-add-section').hidden = false;
     $('#kn-add-note [name=title]').focus();
   });
+  $('#kn-sign-in').addEventListener('click', () => window.KnowledgeAccount.open());
   $('#kn-add-open').addEventListener('click', () => {
     delete $('#kn-add-edge').dataset.pickingTarget;
     adding = true; $('#kn-add-section').hidden = false;
@@ -324,15 +335,13 @@
     formControls.forEach((control) => { control.disabled = true; });
     $('#kn-add-edge button[type=submit]').disabled = true;
     try {
-      if (signedIn) await K.api('personal-note', 'POST', node);
+      await K.api('personal-note', 'POST', node);
       data.nodes.push(node);
-      const persisted = signedIn || K.saveLocal(data);
       form.reset(); adding = hasCreationDraft(); render();
       if (!adding) canvas.focus(node.id);
-      if (!persisted) status('Node is visible on this page only; reload or navigation will lose it because browser storage is unavailable.');
-      else if (adding) status('Node created. Your unfinished connection remains in the Add and connect form.');
+      if (adding) status('Node saved to your account. Your unfinished connection remains in the Add and connect form.');
       else status('Node created and saved.');
-    } catch (error) { status(error.message); }
+    } catch (error) { writeError(error); }
     finally {
       pendingWrites -= 1; creating = false;
       $('#kn-add-cancel').disabled = false;
@@ -354,13 +363,12 @@
     $('#kn-add-note button[type=submit]').disabled = true;
     formControls.forEach((control) => { control.disabled = true; });
     try {
-      if (signedIn) await K.api('personal-edge', 'POST', edge);
+      await K.api('personal-edge', 'POST', edge);
       data.edges.push(edge);
-      const persisted = signedIn || K.saveLocal(data);
       form.reset(); edgeSelectionTouched = false; delete form.dataset.pickingTarget;
       adding = hasCreationDraft(); render(); canvas.focus(target);
-      status(persisted ? 'Connection saved.' : 'Connection is visible on this page only; reload or navigation will lose it because browser storage is unavailable.');
-    } catch (error) { status(error.message); }
+      status('Connection saved to your account.');
+    } catch (error) { writeError(error); }
     finally {
       pendingWrites -= 1; creating = false;
       $('#kn-add-cancel').disabled = false;
@@ -370,19 +378,22 @@
   });
   try {
     const session = await K.api('session');
-    if (session.signedIn) {
-      signedIn = true; $('#kn-teacher-link').hidden = session.role !== 'teacher';
+    if (session.signedIn && session.role === 'student') {
+      signedIn = true;
       await loadAccount();
-      status(`Account network for ${session.email}. Browser records remain separate until you import them in Account & data.`);
+      status(`Account network for ${session.email}.`);
     } else {
-      await refreshTeacherEdges(); render();
-      if (!window.SkillLoop.storageAvailable()) status('Local Mode · Browser storage is unavailable; changes may be lost when this page closes.');
-      else if (!session.backendConfigured) status('Local Mode · Your records remain in this browser. Account sync is unavailable.');
-      else status('Local Mode · Your records remain in this browser. Sign in from Account & data to use an account network.');
+      $('#kn-empty').hidden = false;
+      $('#kn-empty').querySelector('h2').textContent = session.signedIn ? 'Student workspace only' : 'Sign in to use My Knowledge';
+      $('#kn-create-first').hidden = true;
+      $('#kn-sign-in').hidden = session.signedIn || !session.backendConfigured;
+      status(session.signedIn ? 'This account opens in Teaching Studio.' :
+        session.backendConfigured ? 'Sign in to save personal knowledge to your account.' : 'Account service is unavailable. Explore public knowledge instead.');
     }
-  } catch {
-    signedIn = false; data = localData;
-    await refreshTeacherEdges(); render();
-    status(window.SkillLoop.storageAvailable() ? 'Local Mode · Your records remain in this browser. Account sync is unavailable.' : 'Local Mode · Browser storage is unavailable; changes may be lost when this page closes.');
+  } catch (error) {
+    signedIn = false; data = { nodes: [], edges: [] };
+    $('#kn-empty').hidden = false;
+    $('#kn-create-first').hidden = true;
+    status(`Account network is unavailable: ${error.message} No browser data was loaded or written.`);
   }
 })();

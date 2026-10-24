@@ -130,53 +130,22 @@
       $('#kn-activities-section').hidden = !activities.length;
       if (activities.length) renderActivities($('#kn-activities'), activities);
       if (!pages.childElementCount) pages.textContent = 'More materials will appear when the teacher publishes them.';
-      const referenceLocally = () => {
-        const created = K.referenceNode(graph, topic, K.local());
-        const persisted = window.SkillLoop.storageAvailable();
-        if (!persisted) return created
-          ? 'Reference could not be saved because browser storage is unavailable. It will not appear in My Knowledge after navigation.'
-          : 'Reference is in memory only and will be lost after navigation; browser storage is unavailable.';
-        return created ? 'Referenced in this browser. Open My Knowledge to see it.' : 'Already in this browser network.';
-      };
       const referenceButton = $('#kn-reference');
       referenceButton.addEventListener('click', async () => {
         referenceButton.disabled = true;
-        let accountSession = false;
         try {
           const session = await K.api('session');
-          if (session.signedIn) {
-            accountSession = true;
-            const result = await K.api('reference', 'POST', { graphId: graph.publication.id,
-              conceptId: topic.id, sourceVersion: graph.publication.version });
-            status(result.created ? 'Referenced in your account network.' : 'Already in your account network.');
-          } else {
-            status(referenceLocally());
+          if (!session.signedIn || session.role !== 'student') {
+            status(session.signedIn ? 'This action is available in a student account.' : 'Sign in to a student account to save this concept.');
+            if (!session.signedIn) window.KnowledgeAccount.open();
+            return;
           }
+          const result = await K.api('reference', 'POST', { graphId: graph.publication.id,
+            conceptId: topic.id, sourceVersion: graph.publication.version });
+          status(result.created ? 'Referenced in your account network.' : 'Already in your account network.');
         } catch (error) {
-          if (accountSession) status(`Account reference was not saved: ${error.message} Your browser records were not changed.`);
-          else if (/configured|unavailable|Failed to fetch/i.test(error.message))
-            status(`Account status could not be checked. ${referenceLocally()}`);
-          else status(error.message);
+          status(`Reference was not saved: ${error.message} No browser knowledge record was written.`);
         } finally { referenceButton.disabled = false; }
-      });
-      const mark = $('#kn-studied');
-      const old = K.legacy();
-      const legacyCompleted = Array.isArray(old.completed) ? old.completed : [];
-      const studied = new Set(window.SkillLoop.read('knowledgeStudyV2',
-        legacyCompleted.map((id) => `${K.sampleId}:${id}`)));
-      const markKey = `${graph.publication.id}:${topic.id}`;
-      mark.textContent = studied.has(markKey) ? 'Remove studied mark' : 'Mark as studied';
-      mark.addEventListener('click', () => {
-        if (studied.has(markKey)) studied.delete(markKey); else studied.add(markKey);
-        const persisted = window.SkillLoop.write('knowledgeStudyV2', [...studied]);
-        if (persisted && graph.publication.id === K.sampleId &&
-            (old.completed == null || Array.isArray(old.completed))) {
-          const completed = new Set(legacyCompleted);
-          if (studied.has(markKey)) completed.add(topic.id); else completed.delete(topic.id);
-          window.SkillLoop.write('knowledge', { ...old, completed: [...completed] });
-        }
-        mark.textContent = studied.has(markKey) ? 'Remove studied mark' : 'Mark as studied';
-        status(persisted ? 'Study mark saved in this browser. This is self-reported, not a test score.' : 'Study mark is visible on this page only; reload or navigation will lose it because browser storage is unavailable.');
       });
       return;
     }
