@@ -2,7 +2,7 @@
   const K = window.KnowledgeNetwork;
   const $ = K.$;
   let signedIn = false, graphId = null, draft = null, revision = null, dirty = false, selectedId = null;
-  let saving = false, publishing = false, transitioning = false, editSequence = 0, loadSequence = 0, backendAvailable = true;
+  let saving = false, publishing = false, transitioning = false, editSequence = 0, loadSequence = 0, backendAvailable = false;
   const pendingForms = new Set();
   let graphList = [];
   const canvas = new K.Canvas($('#teacher-canvas'), { editable: true, onSelect: selectTopic,
@@ -33,9 +33,7 @@
     controls(); msg(dirty ? 'Unsaved draft changes. Save before publishing.' : 'Form changes discarded; draft is unchanged.');
   }
   function controls() {
-    $('#teacher-login').hidden = signedIn || !backendAvailable;
-    $('#teacher-logout').hidden = !signedIn;
-    $('#teacher-logout').disabled = transitioning;
+    $('#teacher-sign-in').hidden = signedIn || !backendAvailable;
     $('#teacher-workspace').hidden = !signedIn || transitioning;
     $('#teacher-save').disabled = !draft || saving || publishing || transitioning;
     $('#teacher-reviewed').disabled = !draft || !revision || dirty || saving || publishing || transitioning || !!pendingForms.size;
@@ -55,6 +53,9 @@
     const url = new URL(K.href('graph', { graph: graphId }), location.origin);
     share.replaceChildren(document.createTextNode('Published share link: '));
     const anchor = K.make('a', '', url.href); anchor.href = url.href; share.append(anchor);
+    const learning = K.make('a', 'sl-btn', 'Open published Learning View');
+    learning.href = url.href;
+    share.append(learning);
   }
   async function withWorkspaceTransition(message, action) {
     if (transitioning) return false;
@@ -274,32 +275,13 @@
     renderShareLink();
     msg(revision ? `Loaded private draft ${revision}.` : 'Sample content loaded. Save a draft before publishing.');
   }
-  $('#teacher-login').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const button = form.querySelector('button[type=submit]');
-    button.disabled = true;
-    $('#teacher-status').textContent = 'Signing in…';
-    try {
-      await K.api('login', 'POST', { email: formValue(form, 'email'), password: form.elements.password.value });
-      form.elements.password.value = '';
-      const session = await K.api('session');
-      if (session.role !== 'teacher') throw new Error('Teacher role required.');
-      signedIn = true;
-      await withWorkspaceTransition('Loading your graphs…', graphs);
-      $('#teacher-status').textContent = `Signed in as ${session.email}.`;
-    } catch (error) { $('#teacher-status').textContent = signedIn
-      ? `Signed in, but graphs could not load: ${error.message}. Reload to retry.`
-      : `Sign in failed: ${error.message}`; }
-    finally { button.disabled = false; }
-  });
-  $('#teacher-logout').addEventListener('click', async () => {
-    if (!await protectDraft()) return;
-    try { await withWorkspaceTransition('Signing out…', () => K.api('logout', 'POST', {})); }
-    catch (error) { $('#teacher-status').textContent = `Sign out failed: ${error.message}. Retry.`; return; }
+  $('#teacher-sign-in').addEventListener('click', () => window.KnowledgeAccount.open());
+  window.KnowledgeBeforeSignOut = protectDraft;
+  document.addEventListener('knowledge-auth-expired', () => {
     signedIn = false; graphId = null; draft = null; revision = null;
     sessionStorage.removeItem('skillloop.knowledge.preview');
-    $('#teacher-frame').hidden = true; controls(); $('#teacher-status').textContent = 'Signed out.';
+    controls();
+    $('#teacher-status').textContent = 'Your session expired. Sign in again to open Teaching Studio.';
   });
   $('#teacher-create').addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -486,6 +468,7 @@
     return false;
   }
   window.addEventListener('beforeunload', (event) => {
+    if (window.KnowledgeSigningOut) return;
     if (!dirty && !pendingForms.size && !saving && !transitioning) return;
     event.preventDefault(); event.returnValue = '';
   });
@@ -506,7 +489,7 @@
     sessionStorage.setItem('skillloop.knowledge.preview', JSON.stringify(draft));
     const frame = $('#teacher-frame'); frame.hidden = false;
     frame.src = K.href(page, query);
-    msg(`Previewing current ${page} draft. Save this version before publishing.`);
+    msg(`Private Draft Preview: current ${page} draft is visible only to this teacher account. Save this version before publishing.`);
   }
   for (const [id, page] of [['teacher-preview','graph'], ['teacher-preview-concept','concept'],
     ['teacher-preview-question','question'], ['teacher-preview-case','case']])
